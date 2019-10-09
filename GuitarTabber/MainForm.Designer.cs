@@ -50,12 +50,20 @@
 			this.lblVolume = new System.Windows.Forms.Label();
 			this.lblFrequency = new System.Windows.Forms.Label();
 			this.txtDebug = new System.Windows.Forms.TextBox();
+			this.picFFT = new System.Windows.Forms.PictureBox();
+			this.picAudioData = new System.Windows.Forms.PictureBox();
+			this.tmrReadAudio = new System.Windows.Forms.Timer(this.components);
+			this.tbFFTScale = new System.Windows.Forms.TrackBar();
+			this.label6 = new System.Windows.Forms.Label();
 			((System.ComponentModel.ISupportInitialize)(this.udBpm)).BeginInit();
+			((System.ComponentModel.ISupportInitialize)(this.picFFT)).BeginInit();
+			((System.ComponentModel.ISupportInitialize)(this.picAudioData)).BeginInit();
+			((System.ComponentModel.ISupportInitialize)(this.tbFFTScale)).BeginInit();
 			this.SuspendLayout();
 			// 
 			// btnStartRecording
 			// 
-			this.btnStartRecording.Location = new System.Drawing.Point(227, 441);
+			this.btnStartRecording.Location = new System.Drawing.Point(133, 719);
 			this.btnStartRecording.Name = "btnStartRecording";
 			this.btnStartRecording.Size = new System.Drawing.Size(122, 34);
 			this.btnStartRecording.TabIndex = 0;
@@ -65,7 +73,7 @@
 			// 
 			// btnStopRecording
 			// 
-			this.btnStopRecording.Location = new System.Drawing.Point(355, 441);
+			this.btnStopRecording.Location = new System.Drawing.Point(261, 719);
 			this.btnStopRecording.Name = "btnStopRecording";
 			this.btnStopRecording.Size = new System.Drawing.Size(122, 34);
 			this.btnStopRecording.TabIndex = 1;
@@ -199,7 +207,7 @@
 			// label4
 			// 
 			this.label4.AutoSize = true;
-			this.label4.Location = new System.Drawing.Point(227, 165);
+			this.label4.Location = new System.Drawing.Point(13, 146);
 			this.label4.Name = "label4";
 			this.label4.Size = new System.Drawing.Size(66, 13);
 			this.label4.TabIndex = 15;
@@ -208,7 +216,7 @@
 			// label5
 			// 
 			this.label5.AutoSize = true;
-			this.label5.Location = new System.Drawing.Point(426, 165);
+			this.label5.Location = new System.Drawing.Point(212, 146);
 			this.label5.Name = "label5";
 			this.label5.Size = new System.Drawing.Size(79, 13);
 			this.label5.TabIndex = 16;
@@ -217,7 +225,7 @@
 			// lblVolume
 			// 
 			this.lblVolume.AutoSize = true;
-			this.lblVolume.Location = new System.Drawing.Point(300, 165);
+			this.lblVolume.Location = new System.Drawing.Point(86, 146);
 			this.lblVolume.Name = "lblVolume";
 			this.lblVolume.Size = new System.Drawing.Size(0, 13);
 			this.lblVolume.TabIndex = 17;
@@ -225,24 +233,66 @@
 			// lblFrequency
 			// 
 			this.lblFrequency.AutoSize = true;
-			this.lblFrequency.Location = new System.Drawing.Point(512, 165);
+			this.lblFrequency.Location = new System.Drawing.Point(298, 146);
 			this.lblFrequency.Name = "lblFrequency";
 			this.lblFrequency.Size = new System.Drawing.Size(0, 13);
 			this.lblFrequency.TabIndex = 18;
 			// 
 			// txtDebug
 			// 
-			this.txtDebug.Location = new System.Drawing.Point(230, 251);
+			this.txtDebug.Location = new System.Drawing.Point(16, 232);
 			this.txtDebug.Name = "txtDebug";
 			this.txtDebug.ScrollBars = System.Windows.Forms.ScrollBars.Horizontal;
 			this.txtDebug.Size = new System.Drawing.Size(216, 20);
 			this.txtDebug.TabIndex = 19;
 			// 
+			// picFFT
+			// 
+			this.picFFT.Location = new System.Drawing.Point(440, 414);
+			this.picFFT.Name = "picFFT";
+			this.picFFT.Size = new System.Drawing.Size(433, 265);
+			this.picFFT.TabIndex = 20;
+			this.picFFT.TabStop = false;
+			// 
+			// picAudioData
+			// 
+			this.picAudioData.Location = new System.Drawing.Point(440, 108);
+			this.picAudioData.Name = "picAudioData";
+			this.picAudioData.Size = new System.Drawing.Size(433, 266);
+			this.picAudioData.TabIndex = 21;
+			this.picAudioData.TabStop = false;
+			// 
+			// tmrReadAudio
+			// 
+			this.tmrReadAudio.Enabled = true;
+			this.tmrReadAudio.Interval = 50;
+			this.tmrReadAudio.Tick += new System.EventHandler(this.TmrReadAudio_Tick);
+			// 
+			// tbFFTScale
+			// 
+			this.tbFFTScale.Location = new System.Drawing.Point(573, 708);
+			this.tbFFTScale.Name = "tbFFTScale";
+			this.tbFFTScale.Size = new System.Drawing.Size(181, 45);
+			this.tbFFTScale.TabIndex = 22;
+			this.tbFFTScale.Value = 3;
+			// 
+			// label6
+			// 
+			this.label6.AutoSize = true;
+			this.label6.Location = new System.Drawing.Point(143, 344);
+			this.label6.Name = "label6";
+			this.label6.Size = new System.Drawing.Size(0, 13);
+			this.label6.TabIndex = 23;
+			// 
 			// MainForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(805, 515);
+			this.ClientSize = new System.Drawing.Size(931, 790);
+			this.Controls.Add(this.label6);
+			this.Controls.Add(this.tbFFTScale);
+			this.Controls.Add(this.picAudioData);
+			this.Controls.Add(this.picFFT);
 			this.Controls.Add(this.txtDebug);
 			this.Controls.Add(this.lblFrequency);
 			this.Controls.Add(this.lblVolume);
@@ -265,6 +315,9 @@
 			this.Name = "MainForm";
 			this.Text = "Guitar Tabber";
 			((System.ComponentModel.ISupportInitialize)(this.udBpm)).EndInit();
+			((System.ComponentModel.ISupportInitialize)(this.picFFT)).EndInit();
+			((System.ComponentModel.ISupportInitialize)(this.picAudioData)).EndInit();
+			((System.ComponentModel.ISupportInitialize)(this.tbFFTScale)).EndInit();
 			this.ResumeLayout(false);
 			this.PerformLayout();
 
@@ -293,6 +346,11 @@
 		private System.Windows.Forms.Label lblVolume;
 		private System.Windows.Forms.Label lblFrequency;
 		private System.Windows.Forms.TextBox txtDebug;
+		private System.Windows.Forms.PictureBox picFFT;
+		private System.Windows.Forms.PictureBox picAudioData;
+		private System.Windows.Forms.Timer tmrReadAudio;
+		private System.Windows.Forms.TrackBar tbFFTScale;
+		private System.Windows.Forms.Label label6;
 	}
 }
 

@@ -15,30 +15,121 @@ namespace GuitarTabber
 {
 	public partial class MainForm : Form
 	{
-		//private Tab tab;
-		private WaveOutEvent metronomeTickSound;
-		private AudioFileReader tickSound;
+		AudioInterpreter interpreter;
 
-		private AudioInterpreter interpreter;
+		readonly short[] pcmBuffer;
+		int amountBufferFilled;
+
+		//private Tab tab;
+		WaveOutEvent metronomeTickSound;
+		AudioFileReader tickSound;
+
+		Graphics audioDataGfx;
+		Graphics fftGfx;
 
 		public MainForm()
 		{
 			InitializeComponent();
 
+			interpreter = new AudioInterpreter();
+			pcmBuffer = new short[AudioInterpreter.BUFFER_LENGTH_BYTES / 2];
+
+			// initialize other stuff
 			metronomeTickSound = new WaveOutEvent();
 			tickSound = new AudioFileReader(Resources.MetronomeTickFile);
 			metronomeTickSound.Init(tickSound);
 			tmrMetronome.Interval = (int)(60000 / udBpm.Value);
+			fftGfx = picFFT.CreateGraphics();
+			audioDataGfx = picAudioData.CreateGraphics();
+		}
 
-			interpreter = new AudioInterpreter();
+		private void TmrReadAudio_Tick(object sender, EventArgs e)
+		{
+			tmrReadAudio.Stop();
+
+			short[] tickPCM = interpreter.TickData();
+			//(int beginNote, int endNote) = interpreter.StartEndNote(tickPCM);
+			//if (amountBufferFilled == pcmBuffer.Length)
+			//{
+			//	Array.Copy(tickPCM, pcmBuffer, tickPCM.Length);
+			//}
+			//else
+			//{
+			//	for (int i = beginNote; i < endNote; i++)
+			//	{
+			//		pcmBuffer[i + amountBufferFilled] = tickPCM[i];
+			//	}
+			//}
+
+			
+
+			double[] fft = AudioInterpreter.GetFFT(tickPCM); // 0.18 millisec
+
+			int diff = FFTInterpreter.FindPeakDifference(fft);
+			label6.Text = diff.ToString();
+
+			DrawDiagrams(tickPCM, fft); // 83 milliseconds
+
+
+
+			//if (fft.Max() > 10000.0)
+			//{
+			//	//int[] dominantFreqs = FFTInterpreter.DominantFrequencies(fft); // 0.01 millisec
+			//}
+
+			tmrReadAudio.Start();
+
+		}
+
+		private void DrawDiagrams(short[] pcm, double[] fft)
+		{
+			audioDataGfx.Clear(picAudioData.BackColor);
+			fftGfx.Clear(picAudioData.BackColor);
+
+			Pen blackPen = new Pen(Color.Black);
+			Pen redPen = new Pen(Color.Red);
+
+			// draw pcm data to audio data picturebox
+			/*double valToXPixCoeff = picAudioData.Width / (double)pcm.Length;
+			double valToYPixCoeff = (picAudioData.Height / 2.0) / short.MaxValue;
+			for (int i = 0; i < pcm.Length; i += 2)
+			{
+				int x = (int)(i * valToXPixCoeff) + 1;
+				int height = (int)(pcm[i] * valToYPixCoeff * 3);
+				if (height != 0)
+				{
+					audioDataGfx.DrawLine(redPen, x, picAudioData.Height / 2, x, picAudioData.Height / 2 - height);
+				}
+			}
+
+			// draws audio data grid
+			audioDataGfx.DrawLine(blackPen, 0, 0, 0, picAudioData.Height);
+			audioDataGfx.DrawLine(blackPen, 0, picAudioData.Height / 2, picAudioData.Width, picAudioData.Height / 2);*/
+
+			// draw fft data to fft picturebox
+			double valToXPixCoeffFFT = picFFT.Width / (double)fft.Length;
+			double valToYPixCoeffFFT = (picFFT.Height / 2.0) * (tbFFTScale.Value + 1) / 100000.0;
+			for (int i = 0; i < fft.Length; i++)
+			{
+				int x = (int)(i * valToXPixCoeffFFT) + 1;
+				int height = (int)(fft[i] * valToYPixCoeffFFT);
+				fftGfx.DrawLine(redPen, x, picFFT.Height, x, picFFT.Height - height);
+			}
+
+			fftGfx.DrawLine(blackPen, 0, 0, 0, picFFT.Height);
+			fftGfx.DrawLine(blackPen, 0, picFFT.Height - 1, picFFT.Width, picFFT.Height - 1);
+
+			blackPen.Dispose();
+			redPen.Dispose();
 		}
 
 		private void tmrTabTime_Tick(object sender, EventArgs e)
 		{
-			double volume, frequency;
-			interpreter.Tick(out volume, out frequency);
+			tmrTabTime.Enabled = false;
 
-			//txtDebug.Text += volume.ToString() + '-';
+			
+
+			/*interpreter.Tick(out double volume, out double frequency);
 
 			if (volume != 0)
 			{
@@ -50,9 +141,9 @@ namespace GuitarTabber
 			{
 				lblFrequency.Text = frequency.ToString();
 				lblFrequency.Refresh();
-			}
+			}*/
 
-			//tab.totalLength += tmrTabTime.Interval;
+			tmrTabTime.Enabled = true;
 		}
 
 		private void tmrMetronome_Tick(object sender, EventArgs e)
@@ -68,11 +159,6 @@ namespace GuitarTabber
 		{
 			tmrMetronome.Interval = (int)(60000 / udBpm.Value);
 			//Tab t = new Tab(new string[] { "E", "A", "D", "G", "B", "e" }, 100, 4);
-		}
-
-		private void NewTab(string[] tuning)
-		{
-			//tab = new Tab(tuning, udBpm.Value, );
 		}
 
 		private void btnStartRecording_Click(object sender, EventArgs e)
@@ -142,6 +228,6 @@ namespace GuitarTabber
 			//tab = null;
 			tmrTabTime.Stop();
 			tmrTabTime.Enabled = false;
-		}
+		}	
 	}
 }
