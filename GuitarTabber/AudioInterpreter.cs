@@ -16,8 +16,9 @@ namespace GuitarTabber
 		WaveIn waveIn;
 		BufferedWaveProvider bwp;
 
-		public const int SAMPLING_FREQUENCY = 44100; // in Hz
-		public const int BUFFER_LENGTH_BYTES = 4096;
+		public const int SAMPLING_FREQUENCY = 11025; // in Hz
+		const int BUFFER_LENGTH_BYTES = 4096;
+		public const int BUFFER_LENGTH_16 = BUFFER_LENGTH_BYTES / 2; // buffer length in 16-bit units
 
 		public AudioInterpreter()
 		{
@@ -63,6 +64,35 @@ namespace GuitarTabber
 			}
 
 			return data16Bit;
+		}
+
+		public static double[] GetFFT(short[] pcm)
+		{
+			double[] real = new double[pcm.Length];
+			double[] imag = new double[pcm.Length];
+			for (int i = 0; i < pcm.Length; i++)
+			{
+				real[i] = pcm[i];
+			}
+			FourierTransform2.FFT(real, imag, FourierTransform.Direction.Forward);
+
+			// open low e string: 82.4 Hz, F24 high e: 1318.5 Hz
+			const double LOWEST_FREQ = 0;
+			const double HIGHEST_FREQ = 330 * 16;
+
+			// target high frequency will be 1320 Hz (24th fret e string standard tuning)
+			const double INDEX_TO_HZ = (double)SAMPLING_FREQUENCY / BUFFER_LENGTH_16; // each index + 21.5 Hz
+
+			// indexes of lower and upper bound freqs in FFT
+			const int START = (int)(LOWEST_FREQ / INDEX_TO_HZ);
+			const int END = (int)(HIGHEST_FREQ / INDEX_TO_HZ);
+			double[] freqs = new double[END - START];
+			for (int i = 10; i < freqs.Length; i++)
+			{
+				freqs[i] = Math.Sqrt((real[START + i] * real[START + i]) + (imag[START + i] * imag[START + i]));
+			}
+
+			return freqs;
 		}
 
 		// finds when a note begins to be played from the pcm sample
@@ -156,31 +186,6 @@ namespace GuitarTabber
 			return freqs.Max();
 		}*/
 
-		public static double[] GetFFT(short[] data)
-		{
-			double[] real = new double[data.Length];
-			double[] imag = new double[data.Length];
-			for (int i = 0; i < data.Length; i++)
-			{
-				real[i] = data[i];
-			}
-			FourierTransform2.FFT(real, imag, FourierTransform.Direction.Forward);
-
-			const int MAX_FREQUENCY = SAMPLING_FREQUENCY / 2;
-
-			// target high frequency will be 1320 Hz (24th fret e string standard tuning)
-			// discard second half of fft as second half mirrors first half
-			const double INDEX_TO_HZ = SAMPLING_FREQUENCY / (BUFFER_LENGTH_BYTES / 2); // each index + 21.5 Hz
-			const int SIZE = BUFFER_LENGTH_BYTES / 8;//(int)((1320.0 / MAX_FREQUENCY * BUFFER_LENGTH_BYTES / 2) / 2);
-
-			// low e string: 82.4 Hz, high e: 1318.5 Hz
-			double[] freqs = new double[SIZE];
-			for (int i = 10; i < freqs.Length; i++)
-			{
-				freqs[i] = Math.Sqrt((real[i] * real[i]) + (imag[i] * imag[i]));
-			}
-
-			return freqs;
-		}
+		
 	}
 }

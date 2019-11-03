@@ -31,7 +31,6 @@
 			this.components = new System.ComponentModel.Container();
 			this.btnStartRecording = new System.Windows.Forms.Button();
 			this.btnStopRecording = new System.Windows.Forms.Button();
-			this.tmrTabTime = new System.Windows.Forms.Timer(this.components);
 			this.tmrMetronome = new System.Windows.Forms.Timer(this.components);
 			this.udBpm = new System.Windows.Forms.NumericUpDown();
 			this.chkMetronomeOn = new System.Windows.Forms.CheckBox();
@@ -55,6 +54,7 @@
 			this.tmrReadAudio = new System.Windows.Forms.Timer(this.components);
 			this.tbFFTScale = new System.Windows.Forms.TrackBar();
 			this.label6 = new System.Windows.Forms.Label();
+			this.btnBeginAnalyzing = new System.Windows.Forms.Button();
 			((System.ComponentModel.ISupportInitialize)(this.udBpm)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.picFFT)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.picAudioData)).BeginInit();
@@ -80,12 +80,6 @@
 			this.btnStopRecording.Text = "Stop Recording";
 			this.btnStopRecording.UseVisualStyleBackColor = true;
 			this.btnStopRecording.Click += new System.EventHandler(this.btnStopRecording_Click);
-			// 
-			// tmrTabTime
-			// 
-			this.tmrTabTime.Enabled = true;
-			this.tmrTabTime.Interval = 10;
-			this.tmrTabTime.Tick += new System.EventHandler(this.tmrTabTime_Tick);
 			// 
 			// tmrMetronome
 			// 
@@ -248,6 +242,7 @@
 			// 
 			// picFFT
 			// 
+			this.picFFT.BackColor = System.Drawing.Color.White;
 			this.picFFT.Location = new System.Drawing.Point(440, 414);
 			this.picFFT.Name = "picFFT";
 			this.picFFT.Size = new System.Drawing.Size(433, 265);
@@ -256,6 +251,7 @@
 			// 
 			// picAudioData
 			// 
+			this.picAudioData.BackColor = System.Drawing.Color.White;
 			this.picAudioData.Location = new System.Drawing.Point(440, 108);
 			this.picAudioData.Name = "picAudioData";
 			this.picAudioData.Size = new System.Drawing.Size(433, 266);
@@ -265,7 +261,7 @@
 			// tmrReadAudio
 			// 
 			this.tmrReadAudio.Enabled = true;
-			this.tmrReadAudio.Interval = 50;
+			this.tmrReadAudio.Interval = 200;
 			this.tmrReadAudio.Tick += new System.EventHandler(this.TmrReadAudio_Tick);
 			// 
 			// tbFFTScale
@@ -274,7 +270,7 @@
 			this.tbFFTScale.Name = "tbFFTScale";
 			this.tbFFTScale.Size = new System.Drawing.Size(181, 45);
 			this.tbFFTScale.TabIndex = 22;
-			this.tbFFTScale.Value = 3;
+			this.tbFFTScale.Value = 1;
 			// 
 			// label6
 			// 
@@ -284,11 +280,21 @@
 			this.label6.Size = new System.Drawing.Size(0, 13);
 			this.label6.TabIndex = 23;
 			// 
+			// btnBeginAnalyzing
+			// 
+			this.btnBeginAnalyzing.Location = new System.Drawing.Point(49, 286);
+			this.btnBeginAnalyzing.Name = "btnBeginAnalyzing";
+			this.btnBeginAnalyzing.Size = new System.Drawing.Size(154, 55);
+			this.btnBeginAnalyzing.TabIndex = 24;
+			this.btnBeginAnalyzing.Text = "Begin Analyzing";
+			this.btnBeginAnalyzing.UseVisualStyleBackColor = true;
+			// 
 			// MainForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(931, 790);
+			this.Controls.Add(this.btnBeginAnalyzing);
 			this.Controls.Add(this.label6);
 			this.Controls.Add(this.tbFFTScale);
 			this.Controls.Add(this.picAudioData);
@@ -327,7 +333,6 @@
 
 		private System.Windows.Forms.Button btnStartRecording;
 		private System.Windows.Forms.Button btnStopRecording;
-		private System.Windows.Forms.Timer tmrTabTime;
 		private System.Windows.Forms.Timer tmrMetronome;
 		private System.Windows.Forms.NumericUpDown udBpm;
 		private System.Windows.Forms.CheckBox chkMetronomeOn;
@@ -351,6 +356,7 @@
 		private System.Windows.Forms.Timer tmrReadAudio;
 		private System.Windows.Forms.TrackBar tbFFTScale;
 		private System.Windows.Forms.Label label6;
+		private System.Windows.Forms.Button btnBeginAnalyzing;
 	}
 }
 

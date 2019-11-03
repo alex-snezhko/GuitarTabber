@@ -32,7 +32,7 @@ namespace GuitarTabber
 			InitializeComponent();
 
 			interpreter = new AudioInterpreter();
-			pcmBuffer = new short[AudioInterpreter.BUFFER_LENGTH_BYTES / 2];
+			pcmBuffer = new short[AudioInterpreter.BUFFER_LENGTH_16];
 
 			// initialize other stuff
 			metronomeTickSound = new WaveOutEvent();
@@ -65,8 +65,8 @@ namespace GuitarTabber
 
 			double[] fft = AudioInterpreter.GetFFT(tickPCM); // 0.18 millisec
 
-			int diff = FFTInterpreter.FindPeakDifference(fft);
-			label6.Text = diff.ToString();
+			//List<int> dominantFreqs= FFTInterpreter.DominantFreqs(fft);
+			//label6.Text = dominantFreqs[0].ToString();
 
 			DrawDiagrams(tickPCM, fft); // 83 milliseconds
 
@@ -119,31 +119,10 @@ namespace GuitarTabber
 			fftGfx.DrawLine(blackPen, 0, 0, 0, picFFT.Height);
 			fftGfx.DrawLine(blackPen, 0, picFFT.Height - 1, picFFT.Width, picFFT.Height - 1);
 
+			fftGfx.DrawLine(blackPen, picFFT.Width / 16, 0, picFFT.Width / 16, picFFT.Height / 2);
+
 			blackPen.Dispose();
 			redPen.Dispose();
-		}
-
-		private void tmrTabTime_Tick(object sender, EventArgs e)
-		{
-			tmrTabTime.Enabled = false;
-
-			
-
-			/*interpreter.Tick(out double volume, out double frequency);
-
-			if (volume != 0)
-			{
-				lblVolume.Text = volume.ToString();
-				lblVolume.Refresh();
-			}
-
-			if(frequency != 0)
-			{
-				lblFrequency.Text = frequency.ToString();
-				lblFrequency.Refresh();
-			}*/
-
-			tmrTabTime.Enabled = true;
 		}
 
 		private void tmrMetronome_Tick(object sender, EventArgs e)
@@ -218,16 +197,14 @@ namespace GuitarTabber
 				}
 			}
 
-			//tab = new Tab(tunings, (int)udBpm.Value, int.Parse(txtBeatsPerMeasure.Text));
-			tmrTabTime.Enabled = true;
-			tmrTabTime.Start();
+
 		}
 
 		private void btnStopRecording_Click(object sender, EventArgs e)
 		{
 			//tab = null;
-			tmrTabTime.Stop();
-			tmrTabTime.Enabled = false;
+			//tmrTabTime.Stop();
+			//tmrTabTime.Enabled = false;
 		}	
 	}
 }

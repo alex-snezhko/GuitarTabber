@@ -8,19 +8,87 @@ namespace GuitarTabber
 {
 	static class FFTInterpreter
 	{
+		static double[] ambientNoiseLevels;
+
 		public static void AnalyzeFFT(short[] fft)
 		{
 
 		}
 
-		public static int FindPeakDifference(double[] fft)
+		public static void FindAmbientLevel(List<double[]> fftList)
 		{
-			int[] topN = DominantFrequencies(fft);
-
-			return ValidDiff(topN);
+			ambientNoiseLevels = new double[fftList[0].Length];
+			for (int i = 0; i < fftList.Count; i++)
+			{
+				double max = 0;
+				for (int j = 0; j < fftList.Count; j++)
+				{
+					max = Math.Max(max, fftList[j][i]);
+				}
+				ambientNoiseLevels[i] = max;
+			}
 		}
 
-		static int[] DominantFrequencies(double[] fft)
+		public static List<int> DominantFreqs(double[] fft)
+		{
+			// finds all prominent frequencies in fft signal (harmonics ignored)
+			List<int> peakIndexes = new List<int>();
+
+			for (int i = 0; i < fft.Length; i++)
+			{
+				if (fft[i] < ambientNoiseLevel * 1.2)
+				{
+					continue;
+				}
+
+				// add a frequency to the list of peaks if it is higher than surrounding frequencies
+				if (!IsHarmonic(i) && IsPeak(i))
+				{
+					peakIndexes.Add(i);
+				}
+			}
+
+			// finds whether or not a given index is a harmonic of a note already found
+			bool IsHarmonic(int index)
+			{
+				foreach (int peak in peakIndexes)
+				{
+					double actualQuotient = (double)index / peak;
+					int intQuotient = index / peak;
+					if (actualQuotient - intQuotient / actualQuotient < 0.05)
+					{
+						return true;
+					}
+				}
+
+				return false;
+			}
+
+			// finds whether or not a given index is a relative peak
+			bool IsPeak(int index)
+			{
+				const int COMP_RADIUS = 4;
+
+				for (int comp = index - COMP_RADIUS; comp <= index + COMP_RADIUS; comp++)
+				{
+					if (comp == index || comp < 0 || comp >= fft.Length)
+					{
+						continue;
+					}
+
+					if (fft[index] < fft[comp])
+					{
+						return false;
+					}
+				}
+
+				return true;
+			}
+
+			return peakIndexes;
+		}
+
+		/*static int[] DominantFrequencies(double[] fft)
 		{
 			double avgVal = fft.Sum() / fft.Length;
 
@@ -72,13 +140,17 @@ namespace GuitarTabber
 			// gets top 5 highest dominant frequencies
 			const int N = 5;
 			int[] topN = new int[N];
-			highIndexes.CopyTo(0, topN, 0, N);
-			Array.Sort(topN);
+			if (highIndexes.Count >= 5)
+			{
+				highIndexes.CopyTo(0, topN, 0, N);
+				Array.Sort(topN);
+			}
+			
 
 			return topN;
-		}
+		}*/
 
-		static int ValidDiff(int[] topN)
+		/*static int ValidDiff(int[] topN)
 		{
 			int smallestDiff = topN[1] - topN[0];
 			for (int i = 1; i < topN.Length - 1; i++)
@@ -101,6 +173,6 @@ namespace GuitarTabber
 			}
 
 			return smallestDiff;
-		}
+		}*/
 	}
 }
