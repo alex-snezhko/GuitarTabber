@@ -27,6 +27,8 @@ namespace GuitarTabber
 		Graphics audioDataGfx;
 		Graphics fftGfx;
 
+		List<double[]> ambientLevels;
+
 		public MainForm()
 		{
 			InitializeComponent();
@@ -41,6 +43,8 @@ namespace GuitarTabber
 			tmrMetronome.Interval = (int)(60000 / udBpm.Value);
 			fftGfx = picFFT.CreateGraphics();
 			audioDataGfx = picAudioData.CreateGraphics();
+
+			ambientLevels = new List<double[]>();
 		}
 
 		private void TmrReadAudio_Tick(object sender, EventArgs e)
@@ -48,27 +52,31 @@ namespace GuitarTabber
 			tmrReadAudio.Stop();
 
 			short[] tickPCM = interpreter.TickData();
-			//(int beginNote, int endNote) = interpreter.StartEndNote(tickPCM);
-			//if (amountBufferFilled == pcmBuffer.Length)
-			//{
-			//	Array.Copy(tickPCM, pcmBuffer, tickPCM.Length);
-			//}
-			//else
-			//{
-			//	for (int i = beginNote; i < endNote; i++)
-			//	{
-			//		pcmBuffer[i + amountBufferFilled] = tickPCM[i];
-			//	}
-			//}
+			double[] fft = AudioInterpreter.GetFFT(tickPCM);
+
+			DrawDiagrams(tickPCM, fft); // 83 milliseconds
+
+			if (ambientLevels.Count < 10)
+			{
+				ambientLevels.Add(fft);
+			}
+			else
+			{
+				FFTInterpreter.FindAmbientLevel(ambientLevels);
+				btnBeginAnalyzing.BackColor = Color.Red;
+				if (tickPCM.Max() > 350)
+				{
+					List<int> dominantFreqs = FFTInterpreter.DominantFreqs(fft);
+				}
+				
+			}
 
 			
 
-			double[] fft = AudioInterpreter.GetFFT(tickPCM); // 0.18 millisec
-
-			//List<int> dominantFreqs= FFTInterpreter.DominantFreqs(fft);
+			
 			//label6.Text = dominantFreqs[0].ToString();
 
-			DrawDiagrams(tickPCM, fft); // 83 milliseconds
+			
 
 
 
@@ -91,7 +99,7 @@ namespace GuitarTabber
 
 			// draw pcm data to audio data picturebox
 			/*double valToXPixCoeff = picAudioData.Width / (double)pcm.Length;
-			double valToYPixCoeff = (picAudioData.Height / 2.0) / short.MaxValue;
+			double valToYPixCoeff = (picAudioData.Height / 2.0) * (tbFFTScale.Value + 1) / short.MaxValue;
 			for (int i = 0; i < pcm.Length; i += 2)
 			{
 				int x = (int)(i * valToXPixCoeff) + 1;

@@ -282,12 +282,13 @@
 			// 
 			// btnBeginAnalyzing
 			// 
+			this.btnBeginAnalyzing.BackColor = System.Drawing.SystemColors.Control;
 			this.btnBeginAnalyzing.Location = new System.Drawing.Point(49, 286);
 			this.btnBeginAnalyzing.Name = "btnBeginAnalyzing";
 			this.btnBeginAnalyzing.Size = new System.Drawing.Size(154, 55);
 			this.btnBeginAnalyzing.TabIndex = 24;
 			this.btnBeginAnalyzing.Text = "Begin Analyzing";
-			this.btnBeginAnalyzing.UseVisualStyleBackColor = true;
+			this.btnBeginAnalyzing.UseVisualStyleBackColor = false;
 			// 
 			// MainForm
 			// 

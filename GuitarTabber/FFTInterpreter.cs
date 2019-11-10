@@ -8,22 +8,18 @@ namespace GuitarTabber
 {
 	static class FFTInterpreter
 	{
+		// array of ambient noise levels in environment at each given fft frequency
 		static double[] ambientNoiseLevels;
-
-		public static void AnalyzeFFT(short[] fft)
-		{
-
-		}
 
 		public static void FindAmbientLevel(List<double[]> fftList)
 		{
 			ambientNoiseLevels = new double[fftList[0].Length];
-			for (int i = 0; i < fftList.Count; i++)
+			for (int i = 0; i < ambientNoiseLevels.Length; i++)
 			{
 				double max = 0;
-				for (int j = 0; j < fftList.Count; j++)
+				for (int listIndex = 0; listIndex < fftList.Count; listIndex++)
 				{
-					max = Math.Max(max, fftList[j][i]);
+					max = Math.Max(max, fftList[listIndex][i]);
 				}
 				ambientNoiseLevels[i] = max;
 			}
@@ -36,7 +32,7 @@ namespace GuitarTabber
 
 			for (int i = 0; i < fft.Length; i++)
 			{
-				if (fft[i] < ambientNoiseLevel * 1.2)
+				if (fft[i] <= ambientNoiseLevels[i] * 2.5)
 				{
 					continue;
 				}
@@ -54,8 +50,15 @@ namespace GuitarTabber
 				foreach (int peak in peakIndexes)
 				{
 					double actualQuotient = (double)index / peak;
-					int intQuotient = index / peak;
-					if (actualQuotient - intQuotient / actualQuotient < 0.05)
+					double possibleHarmonic = Math.Round(actualQuotient);
+
+					// tries to see if this is still a harmonic with an allowed tolerance (that may have been caused from
+					//   lack of precision in fft index corresponding to its correct frequency e.g. a frequency that should be
+					//   at precisely index 10.66 being placed in index 11); +/- 1 index should be the most error that this could cause
+					double upperBound = possibleHarmonic * (peak + 1.0 / peak);
+					double lowerBound = possibleHarmonic * (peak - 1.0 / peak);
+
+					if (actualQuotient >= lowerBound && actualQuotient <= upperBound)
 					{
 						return true;
 					}
