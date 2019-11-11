@@ -67,6 +67,14 @@ namespace GuitarTabber
 				if (tickPCM.Max() > 350)
 				{
 					List<int> dominantFreqs = FFTInterpreter.DominantFreqs(fft);
+					if (dominantFreqs.Count >= 1)
+					{
+						lblFrequency.Text = dominantFreqs[0].ToString();
+					}
+					if (dominantFreqs.Count > 1)
+					{
+						int i = 0;
+					}
 				}
 				
 			}

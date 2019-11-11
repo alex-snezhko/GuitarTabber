@@ -28,9 +28,9 @@ namespace GuitarTabber
 		public static List<int> DominantFreqs(double[] fft)
 		{
 			// finds all prominent frequencies in fft signal (harmonics ignored)
-			List<int> peakIndexes = new List<int>();
+			List<int> firstHarmonics = new List<int>();
 
-			for (int i = 0; i < fft.Length; i++)
+			for (int i = 0; i < 1320 / AudioInterpreter.INDEX_TO_HZ; i++)
 			{
 				if (fft[i] <= ambientNoiseLevels[i] * 2.5)
 				{
@@ -40,25 +40,47 @@ namespace GuitarTabber
 				// add a frequency to the list of peaks if it is higher than surrounding frequencies
 				if (!IsHarmonic(i) && IsPeak(i))
 				{
-					peakIndexes.Add(i);
+					// maximum possible number of harmonics that the length of fft array will allow to be found
+					int maxNumHarmonics = fft.Length / i;
+					List<int> harmonics = FindHarmonics(i);
+					// ignore if very few harmonics were found (for the case where 'harmonics' were found coincidentally in distortion)
+					if (harmonics.Count + 1 < maxNumHarmonics / 2)
+					{
+						continue;
+					}
+
+					// try to find actual first harmonic in the case that a second, third, etc harmonic was found
+					int actualFirstHarmonic = i;
+					int possibleFirstHarmonic;
+					for (int divide = 2; (possibleFirstHarmonic = i / divide) < 10; divide++)
+					{
+						List<int> quotientHarmonics = FindHarmonics(possibleFirstHarmonic);
+						if (quotientHarmonics.Count >= harmonics.Count)
+						{
+							harmonics = quotientHarmonics;
+							actualFirstHarmonic = possibleFirstHarmonic;
+						}
+					}
+					firstHarmonics.Add(actualFirstHarmonic);
 				}
 			}
+
+			return firstHarmonics;
 
 			// finds whether or not a given index is a harmonic of a note already found
 			bool IsHarmonic(int index)
 			{
-				foreach (int peak in peakIndexes)
+				foreach (int e in firstHarmonics)
 				{
-					double actualQuotient = (double)index / peak;
-					double possibleHarmonic = Math.Round(actualQuotient);
+					int possibleHarmonic = (int)Math.Round((double)index / e);
 
 					// tries to see if this is still a harmonic with an allowed tolerance (that may have been caused from
 					//   lack of precision in fft index corresponding to its correct frequency e.g. a frequency that should be
 					//   at precisely index 10.66 being placed in index 11); +/- 1 index should be the most error that this could cause
-					double upperBound = possibleHarmonic * (peak + 1.0 / peak);
-					double lowerBound = possibleHarmonic * (peak - 1.0 / peak);
+					int upperBound = possibleHarmonic * (e + 1);
+					int lowerBound = possibleHarmonic * (e - 1);
 
-					if (actualQuotient >= lowerBound && actualQuotient <= upperBound)
+					if (index >= lowerBound && index <= upperBound)
 					{
 						return true;
 					}
@@ -70,7 +92,12 @@ namespace GuitarTabber
 			// finds whether or not a given index is a relative peak
 			bool IsPeak(int index)
 			{
-				const int COMP_RADIUS = 4;
+				if (index < 0 || index >= fft.Length)
+				{
+					return false;
+				}
+
+				const int COMP_RADIUS = 3;
 
 				for (int comp = index - COMP_RADIUS; comp <= index + COMP_RADIUS; comp++)
 				{
@@ -88,7 +115,35 @@ namespace GuitarTabber
 				return true;
 			}
 
-			return peakIndexes;
+			List<int> FindHarmonics(int index)
+			{
+				List<int> harmonics = new List<int>();
+
+				for (int harmonicNum = 2; harmonicNum * index < fft.Length; harmonicNum++)
+				{
+					int upperBound = harmonicNum * (index + 1);
+					int lowerBound = harmonicNum * (index - 1);
+
+					for (int searchIndex = lowerBound; searchIndex <= upperBound; searchIndex++)
+					{
+						if (IsPeak(searchIndex))
+						{
+							harmonics.Add(searchIndex);
+							break;
+						}
+					}
+				}
+
+				return harmonics;
+			}
+
+			void Recheck()
+			{
+				foreach (int e in firstHarmonics)
+				{
+					
+				}
+			}
 		}
 
 		/*static int[] DominantFrequencies(double[] fft)

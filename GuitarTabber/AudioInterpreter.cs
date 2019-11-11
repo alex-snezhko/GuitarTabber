@@ -20,6 +20,8 @@ namespace GuitarTabber
 		const int BUFFER_LENGTH_BYTES = 4096;
 		public const int BUFFER_LENGTH_16 = BUFFER_LENGTH_BYTES / 2; // buffer length in 16-bit units
 
+		public const double INDEX_TO_HZ = (double)SAMPLING_FREQUENCY / BUFFER_LENGTH_16; // each index + 5.38 Hz
+
 		public AudioInterpreter()
 		{
 			if (WaveIn.DeviceCount < 1)
@@ -78,10 +80,7 @@ namespace GuitarTabber
 
 			// open low e string: 82.4 Hz, F24 high e: 1318.5 Hz
 			const double LOWEST_FREQ = 0;
-			const double HIGHEST_FREQ = 330 * 16;
-
-			// target high frequency will be 1320 Hz (24th fret e string standard tuning)
-			const double INDEX_TO_HZ = (double)SAMPLING_FREQUENCY / BUFFER_LENGTH_16; // each index + 21.5 Hz
+			const double HIGHEST_FREQ = 330 * 16;			
 
 			// indexes of lower and upper bound freqs in FFT
 			const int START = (int)(LOWEST_FREQ / INDEX_TO_HZ);
