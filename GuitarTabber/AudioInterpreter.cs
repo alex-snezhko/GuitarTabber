@@ -17,7 +17,7 @@ namespace GuitarTabber
 		BufferedWaveProvider bwp;
 
 		public const int SAMPLING_FREQUENCY = 11025; // in Hz
-		const int BUFFER_LENGTH_BYTES = 4096;
+		const int BUFFER_LENGTH_BYTES = 4089;//4096;
 		public const int BUFFER_LENGTH_16 = BUFFER_LENGTH_BYTES / 2; // buffer length in 16-bit units
 
 		public const double INDEX_TO_HZ = (double)SAMPLING_FREQUENCY / BUFFER_LENGTH_16; // each index + 5.38 Hz
@@ -50,7 +50,7 @@ namespace GuitarTabber
 		{
 			if (bwp.BufferedBytes != BUFFER_LENGTH_BYTES)
 			{
-				int i = 1;
+				return null;
 			}
 			byte[] data8Bit = new byte[bwp.BufferLength];
 			bwp.Read(data8Bit, 0, bwp.BufferLength);

@@ -243,9 +243,9 @@
 			// picFFT
 			// 
 			this.picFFT.BackColor = System.Drawing.Color.White;
-			this.picFFT.Location = new System.Drawing.Point(440, 414);
+			this.picFFT.Location = new System.Drawing.Point(49, 400);
 			this.picFFT.Name = "picFFT";
-			this.picFFT.Size = new System.Drawing.Size(433, 265);
+			this.picFFT.Size = new System.Drawing.Size(980, 265);
 			this.picFFT.TabIndex = 20;
 			this.picFFT.TabStop = false;
 			// 
@@ -294,7 +294,7 @@
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(931, 790);
+			this.ClientSize = new System.Drawing.Size(1242, 790);
 			this.Controls.Add(this.btnBeginAnalyzing);
 			this.Controls.Add(this.label6);
 			this.Controls.Add(this.tbFFTScale);

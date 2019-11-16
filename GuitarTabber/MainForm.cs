@@ -52,6 +52,11 @@ namespace GuitarTabber
 			tmrReadAudio.Stop();
 
 			short[] tickPCM = interpreter.TickData();
+			if (tickPCM == null)
+			{
+				tmrReadAudio.Start();
+				return;
+			}
 			double[] fft = AudioInterpreter.GetFFT(tickPCM);
 
 			DrawDiagrams(tickPCM, fft); // 83 milliseconds
@@ -62,19 +67,22 @@ namespace GuitarTabber
 			}
 			else
 			{
-				FFTInterpreter.FindAmbientLevel(ambientLevels);
-				btnBeginAnalyzing.BackColor = Color.Red;
+				if (btnBeginAnalyzing.BackColor != Color.Red)
+				{
+					FFTInterpreter.FindAmbientLevel(ambientLevels);
+					btnBeginAnalyzing.BackColor = Color.Red;
+				}
 				if (tickPCM.Max() > 350)
 				{
-					List<int> dominantFreqs = FFTInterpreter.DominantFreqs(fft);
-					if (dominantFreqs.Count >= 1)
-					{
-						lblFrequency.Text = dominantFreqs[0].ToString();
-					}
-					if (dominantFreqs.Count > 1)
-					{
-						int i = 0;
-					}
+					//List<int> dominantFreqs = FFTInterpreter.DominantFreqs(fft);
+					//if (dominantFreqs.Count >= 1)
+					//{
+					//	lblFrequency.Text = dominantFreqs[0].ToString();
+					//}
+					//if (dominantFreqs.Count > 1)
+					//{
+					//	int i = 0;
+					//}
 				}
 				
 			}
