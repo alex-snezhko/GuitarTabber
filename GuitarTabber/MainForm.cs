@@ -10,82 +10,78 @@ using System.Windows.Forms;
 using GuitarTabber.Properties;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
+using static GuitarTabber.AudioInput;
 
 namespace GuitarTabber
 {
 	public partial class MainForm : Form
 	{
-		AudioInterpreter interpreter;
-
-		readonly short[] pcmBuffer;
-		int amountBufferFilled;
-
 		//private Tab tab;
 		WaveOutEvent metronomeTickSound;
 		AudioFileReader tickSound;
 
 		Graphics audioDataGfx;
-		Graphics fftGfx;
 
-		List<double[]> ambientLevels;
+		Graphics fftGfx1;
+		Graphics fftGfx2;
+		Graphics fftGfx3;
+		Graphics fftGfx4;
+		Graphics fftGfx5;
 
 		public MainForm()
 		{
 			InitializeComponent();
-
-			interpreter = new AudioInterpreter();
-			pcmBuffer = new short[AudioInterpreter.BUFFER_LENGTH_16];
 
 			// initialize other stuff
 			metronomeTickSound = new WaveOutEvent();
 			tickSound = new AudioFileReader(Resources.MetronomeTickFile);
 			metronomeTickSound.Init(tickSound);
 			tmrMetronome.Interval = (int)(60000 / udBpm.Value);
-			fftGfx = picFFT.CreateGraphics();
+			fftGfx1 = picFFT1.CreateGraphics();
+			fftGfx2 = picFFT2.CreateGraphics();
+			fftGfx3 = picFFT3.CreateGraphics();
+			fftGfx4 = picFFT4.CreateGraphics();
+			fftGfx5 = picFFT5.CreateGraphics();
 			audioDataGfx = picAudioData.CreateGraphics();
 
-			ambientLevels = new List<double[]>();
+			Init();
 		}
 
 		private void TmrReadAudio_Tick(object sender, EventArgs e)
 		{
 			tmrReadAudio.Stop();
 
-			short[] tickPCM = interpreter.TickData();
-			if (tickPCM == null)
+			if (!GatherInput())
 			{
 				tmrReadAudio.Start();
 				return;
 			}
-			double[] fft = AudioInterpreter.GetFFT(tickPCM);
 
-			DrawDiagrams(tickPCM, fft); // 83 milliseconds
+			if (ambientGathered)
+			{
+				btnBeginAnalyzing.BackColor = Color.Red;
 
-			if (ambientLevels.Count < 10)
-			{
-				ambientLevels.Add(fft);
-			}
-			else
-			{
-				if (btnBeginAnalyzing.BackColor != Color.Red)
+				double[][] ffts = new double[5][];
+				for (int i = 0; i < 5; i++)
 				{
-					FFTInterpreter.FindAmbientLevel(ambientLevels);
-					btnBeginAnalyzing.BackColor = Color.Red;
+					ffts[i] = Buffers[i].GetFFT();
 				}
-				if (tickPCM.Max() > 350)
+
+				if (AudioBuffer.pcm.Max() > 350)
 				{
-					//List<int> dominantFreqs = FFTInterpreter.DominantFreqs(fft);
-					//if (dominantFreqs.Count >= 1)
-					//{
-					//	lblFrequency.Text = dominantFreqs[0].ToString();
-					//}
-					//if (dominantFreqs.Count > 1)
-					//{
-					//	int i = 0;
-					//}
+					DrawDiagrams(AudioBuffer.pcm, ffts);
+
+					List<int>[] dominantFreqs = FFTInterpreter.DominantFreqs(Buffers);
+					double[] actualFreqs = new double[5];
+					for (int i = 0; i < 5; i++)
+					{
+						actualFreqs[i] = dominantFreqs[i][0] * Buffers[i].FrequencyResolution;
+					}
+					double avg = actualFreqs.Average();
+
 				}
-				
 			}
+
 
 			
 
@@ -105,10 +101,14 @@ namespace GuitarTabber
 
 		}
 
-		private void DrawDiagrams(short[] pcm, double[] fft)
+		private void DrawDiagrams(short[] pcm, double[][] ffts)
 		{
 			audioDataGfx.Clear(picAudioData.BackColor);
-			fftGfx.Clear(picAudioData.BackColor);
+			fftGfx1.Clear(picAudioData.BackColor);
+			fftGfx2.Clear(picAudioData.BackColor);
+			fftGfx3.Clear(picAudioData.BackColor);
+			fftGfx4.Clear(picAudioData.BackColor);
+			fftGfx5.Clear(picAudioData.BackColor);
 
 			Pen blackPen = new Pen(Color.Black);
 			Pen redPen = new Pen(Color.Red);
@@ -131,19 +131,66 @@ namespace GuitarTabber
 			audioDataGfx.DrawLine(blackPen, 0, picAudioData.Height / 2, picAudioData.Width, picAudioData.Height / 2);*/
 
 			// draw fft data to fft picturebox
-			double valToXPixCoeffFFT = picFFT.Width / (double)fft.Length;
-			double valToYPixCoeffFFT = (picFFT.Height / 2.0) * (tbFFTScale.Value + 1) / 100000.0;
-			for (int i = 0; i < fft.Length; i++)
+			double valToXPixCoeffFFT = picFFT1.Width / (double)ffts[0].Length;
+			double valToYPixCoeffFFT = (picFFT1.Height / 2.0) * (tbFFTScale.Value + 1) / 100000.0;
+			for (int i = 0; i < ffts[0].Length; i++)
 			{
 				int x = (int)(i * valToXPixCoeffFFT) + 1;
-				int height = (int)(fft[i] * valToYPixCoeffFFT);
-				fftGfx.DrawLine(redPen, x, picFFT.Height, x, picFFT.Height - height);
+				int height = (int)(ffts[0][i] * valToYPixCoeffFFT);
+				fftGfx1.DrawLine(redPen, x, picFFT1.Height, x, picFFT1.Height - height);
 			}
 
-			fftGfx.DrawLine(blackPen, 0, 0, 0, picFFT.Height);
-			fftGfx.DrawLine(blackPen, 0, picFFT.Height - 1, picFFT.Width, picFFT.Height - 1);
+			fftGfx1.DrawLine(blackPen, 0, 0, 0, picFFT1.Height);
+			fftGfx1.DrawLine(blackPen, 0, picFFT1.Height - 1, picFFT1.Width, picFFT1.Height - 1);
+			fftGfx1.DrawLine(blackPen, picFFT1.Width / 16, 0, picFFT1.Width / 16, picFFT1.Height / 2);
 
-			fftGfx.DrawLine(blackPen, picFFT.Width / 16, 0, picFFT.Width / 16, picFFT.Height / 2);
+			valToXPixCoeffFFT = picFFT1.Width / (double)ffts[1].Length;
+			for (int i = 0; i < ffts[1].Length; i++)
+			{
+				int x = (int)(i * valToXPixCoeffFFT) + 1;
+				int height = (int)(ffts[1][i] * valToYPixCoeffFFT);
+				fftGfx2.DrawLine(redPen, x, picFFT1.Height, x, picFFT1.Height - height);
+			}
+
+			fftGfx2.DrawLine(blackPen, 0, 0, 0, picFFT1.Height);
+			fftGfx2.DrawLine(blackPen, 0, picFFT1.Height - 1, picFFT1.Width, picFFT1.Height - 1);
+			fftGfx2.DrawLine(blackPen, picFFT1.Width / 16, 0, picFFT1.Width / 16, picFFT1.Height / 2);
+
+			valToXPixCoeffFFT = picFFT1.Width / (double)ffts[2].Length;
+			for (int i = 0; i < ffts[2].Length; i++)
+			{
+				int x = (int)(i * valToXPixCoeffFFT) + 1;
+				int height = (int)(ffts[2][i] * valToYPixCoeffFFT);
+				fftGfx3.DrawLine(redPen, x, picFFT1.Height, x, picFFT1.Height - height);
+			}
+
+			fftGfx3.DrawLine(blackPen, 0, 0, 0, picFFT1.Height);
+			fftGfx3.DrawLine(blackPen, 0, picFFT1.Height - 1, picFFT1.Width, picFFT1.Height - 1);
+			fftGfx3.DrawLine(blackPen, picFFT1.Width / 16, 0, picFFT1.Width / 16, picFFT1.Height / 2);
+
+			valToXPixCoeffFFT = picFFT1.Width / (double)ffts[3].Length;
+			for (int i = 0; i < ffts[3].Length; i++)
+			{
+				int x = (int)(i * valToXPixCoeffFFT) + 1;
+				int height = (int)(ffts[3][i] * valToYPixCoeffFFT);
+				fftGfx4.DrawLine(redPen, x, picFFT1.Height, x, picFFT1.Height - height);
+			}
+
+			fftGfx4.DrawLine(blackPen, 0, 0, 0, picFFT1.Height);
+			fftGfx4.DrawLine(blackPen, 0, picFFT1.Height - 1, picFFT1.Width, picFFT1.Height - 1);
+			fftGfx4.DrawLine(blackPen, picFFT1.Width / 16, 0, picFFT1.Width / 16, picFFT1.Height / 2);
+
+			valToXPixCoeffFFT = picFFT1.Width / (double)ffts[4].Length;
+			for (int i = 0; i < ffts[4].Length; i++)
+			{
+				int x = (int)(i * valToXPixCoeffFFT) + 1;
+				int height = (int)(ffts[4][i] * valToYPixCoeffFFT);
+				fftGfx5.DrawLine(redPen, x, picFFT1.Height, x, picFFT1.Height - height);
+			}
+
+			fftGfx5.DrawLine(blackPen, 0, 0, 0, picFFT1.Height);
+			fftGfx5.DrawLine(blackPen, 0, picFFT1.Height - 1, picFFT1.Width, picFFT1.Height - 1);
+			fftGfx5.DrawLine(blackPen, picFFT1.Width / 16, 0, picFFT1.Width / 16, picFFT1.Height / 2);
 
 			blackPen.Dispose();
 			redPen.Dispose();

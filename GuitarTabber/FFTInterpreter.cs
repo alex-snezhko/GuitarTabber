@@ -8,87 +8,81 @@ namespace GuitarTabber
 {
 	static class FFTInterpreter
 	{
-		// array of ambient noise levels in environment at each given fft frequency
-		static double[] ambientNoiseLevels;
-
-		public static void FindAmbientLevel(List<double[]> fftList)
+		public static List<int> DominantFreqs(AudioBuffer[] buffers)
 		{
-			ambientNoiseLevels = new double[fftList[0].Length];
-			for (int i = 0; i < ambientNoiseLevels.Length; i++)
+			List<int>[] freqsList = new List<int>[5];
+			double[][] ffts = new double[5][];
+			for (int i = 0; i < 5; i++)
 			{
-				double max = 0;
-				for (int listIndex = 0; listIndex < fftList.Count; listIndex++)
-				{
-					max = Math.Max(max, fftList[listIndex][i]);
-				}
-				ambientNoiseLevels[i] = max;
-			}
-		}
-
-		public static List<int> DominantFreqs(double[] fft)
-		{
-			// finds all prominent frequencies in fft signal (harmonics ignored)
-			List<int> firstHarmonics = new List<int>();
-
-			/*int maxIndex = Array.IndexOf(fft, fft.Max());
-
-			List<int> harmonics = FindHarmonics(maxIndex);
-			int actualFirstHarmonic = maxIndex;
-			int possibleFirstHarmonic;
-			for (int divide = 2; (possibleFirstHarmonic = maxIndex / divide) < 10; divide++)
-			{
-				List<int> quotientHarmonics = FindHarmonics(possibleFirstHarmonic);
-				if (quotientHarmonics.Count >= harmonics.Count)
-				{
-					harmonics = quotientHarmonics;
-					actualFirstHarmonic = possibleFirstHarmonic;
-				}
+				ffts[i] = buffers[i].GetFFT();
 			}
 
-			firstHarmonics.Add(actualFirstHarmonic);*/
-
-
-
-
-
-
-			
-
-			for (int i = 0; i < 1320 / AudioInterpreter.INDEX_TO_HZ; i++)
+			int num;
+			for (num = 0; num < 5; num++)
 			{
-				// add a frequency to the list of peaks if it is higher than surrounding frequencies
-				if (IsPeak(i) && !IsHarmonic(i))
-				{
-					// maximum possible number of harmonics that the length of fft array will allow to be found
-					int maxNumHarmonics = fft.Length / i;
-					List<int> harmonics = FindHarmonics(i);
-					// ignore if very few harmonics were found (for the case where 'harmonics' were found coincidentally in distortion)
-					if (harmonics.Count < maxNumHarmonics / 2)
-					{
-						continue;
-					}
+				double[] fft = ffts[num];
 
-					// try to find actual first harmonic in the case that a second, third, etc harmonic was found
-					// (this will only apply to the case where this fact was not discovered earlier)
-					int actualFirstHarmonic = i;
-					int possibleFirstHarmonic;
-					for (int divide = 2; (possibleFirstHarmonic = i / divide) >= 10; divide++) // TODO use prime numbers
+				// finds all prominent frequencies in fft signal (harmonics ignored)
+				List<int> firstHarmonics = new List<int>();
+
+				for (int i = 0; i < 1320 / buffers[num].FrequencyResolution; i++)
+				{
+					// add a frequency to the list of peaks if it is higher than surrounding frequencies
+					if (IsPeak(fft, i) && !IsHarmonic(firstHarmonics, i))
 					{
-						List<int> quotientHarmonics = FindHarmonics(possibleFirstHarmonic);
-						if (quotientHarmonics.Count >= harmonics.Count)
+						// maximum possible number of harmonics that the length of fft array will allow to be found
+						int maxNumHarmonics = fft.Length / i;
+						List<int> harmonics = FindHarmonics(fft, i);
+						// ignore if very few harmonics were found (for the case where 'harmonics' were found coincidentally in distortion)
+						if (harmonics.Count < maxNumHarmonics / 2)
 						{
-							harmonics = quotientHarmonics;
-							actualFirstHarmonic = possibleFirstHarmonic;
+							continue;
 						}
+
+						// try to find actual first harmonic in the case that a second, third, etc harmonic was found
+						// (this will only apply to the case where this fact was not discovered earlier)
+						int actualFirstHarmonic = i;
+						int possibleFirstHarmonic;
+						for (int divide = 2; (possibleFirstHarmonic = i / divide) >= 80 / buffers[num].FrequencyResolution; divide++) // TODO use prime numbers
+						{
+							List<int> quotientHarmonics = FindHarmonics(fft, possibleFirstHarmonic);
+							if (quotientHarmonics.Count >= harmonics.Count)
+							{
+								harmonics = quotientHarmonics;
+								actualFirstHarmonic = possibleFirstHarmonic;
+							}
+						}
+						firstHarmonics.Add(actualFirstHarmonic);
 					}
-					firstHarmonics.Add(actualFirstHarmonic);
 				}
+
+				freqsList[num] = firstHarmonics;
 			}
 
-			return firstHarmonics;
+			return freqsList;
+
+			// finds whether or not a given index is a relative peak
+			bool IsPeak(double[] fft, int index)
+			{
+				if (index < 0 || index >= fft.Length || fft[index] <= buffers[num].FftAmbientNoiseLevels[index] * 2.5)
+				{
+					return false;
+				}
+
+				for (int comp = index - 1; comp <= index + 1; comp++)
+				{
+					bool validIndex = comp != index && comp >= 0 && comp < fft.Length;
+					if (validIndex && fft[index] < fft[comp])
+					{
+						return false;
+					}
+				}
+
+				return true;
+			}
 
 			// finds whether or not a given index is a harmonic of a note already found
-			bool IsHarmonic(int index)
+			bool IsHarmonic(List<int> firstHarmonics, int index)
 			{
 				foreach (int e in firstHarmonics)
 				{
@@ -109,34 +103,7 @@ namespace GuitarTabber
 				return false;
 			}
 
-			// finds whether or not a given index is a relative peak
-			bool IsPeak(int index)
-			{
-				if (fft[index] <= ambientNoiseLevels[index] * 2.5)
-				if (index < 0 || index >= fft.Length)
-				{
-					return false;
-				}
-
-				const int COMP_RADIUS = 3;
-
-				for (int comp = index - COMP_RADIUS; comp <= index + COMP_RADIUS; comp++)
-				{
-					if (comp == index || comp < 0 || comp >= fft.Length)
-					{
-						continue;
-					}
-
-					if (fft[index] < fft[comp])
-					{
-						return false;
-					}
-				}
-
-				return true;
-			}
-
-			List<int> FindHarmonics(int index)
+			List<int> FindHarmonics(double[] fft, int index)
 			{
 				List<int> harmonics = new List<int>();
 				harmonics.Add(index);
@@ -148,7 +115,7 @@ namespace GuitarTabber
 
 					for (int searchIndex = lowerBound; searchIndex <= upperBound; searchIndex++)
 					{
-						if (IsPeak(searchIndex))
+						if (IsPeak(fft, searchIndex))
 						{
 							harmonics.Add(searchIndex);
 							break;
@@ -157,14 +124,6 @@ namespace GuitarTabber
 				}
 
 				return harmonics;
-			}
-
-			void Recheck()
-			{
-				foreach (int e in firstHarmonics)
-				{
-					
-				}
 			}
 		}
 

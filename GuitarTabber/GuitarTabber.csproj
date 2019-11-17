@@ -64,7 +64,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AudioInterpreter.cs" />
+    <Compile Include="AudioInput.cs" />
+    <Compile Include="AudioBuffer.cs" />
     <Compile Include="FFTInterpreter.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
