@@ -61,34 +61,40 @@ namespace GuitarTabber
 			{
 				btnBeginAnalyzing.BackColor = Color.Red;
 
+				short[][] pcms = new short[5][];
+				for (int i = 0; i < 5; i++)
+				{
+					pcms[i] = Buffers[i].pcm;
+				}
 				double[][] ffts = new double[5][];
 				for (int i = 0; i < 5; i++)
 				{
-					ffts[i] = Buffers[i].GetFFT();
+					ffts[i] = Buffers[i].FFT;
 				}
 
-				if (AudioBuffer.pcm.Max() > 350)
-				{
-					DrawDiagrams(AudioBuffer.pcm, ffts);
+				DrawDiagrams(pcms, ffts);
 
-					List<int>[] dominantFreqs = FFTInterpreter.DominantFreqs(Buffers);
-					double[] actualFreqs = new double[5];
-					for (int i = 0; i < 5; i++)
-					{
-						actualFreqs[i] = dominantFreqs[i][0] * Buffers[i].FrequencyResolution;
-					}
-					double avg = actualFreqs.Average();
+				if (pcms[0].Max() > 350)
+				{
+					
+
+					List<double> dominantFreqs = FFTInterpreter.DominantFreqs(Buffers);
+					//for (int i = 0; i < 5; i++)
+					//{
+					//	actualFreqs[i] = dominantFreqs[i][0] * Buffers[i].FrequencyResolution;
+					//}
+					//double avg = actualFreqs.Average();
 
 				}
 			}
 
 
-			
 
-			
+
+
 			//label6.Text = dominantFreqs[0].ToString();
 
-			
+
 
 
 
@@ -101,7 +107,7 @@ namespace GuitarTabber
 
 		}
 
-		private void DrawDiagrams(short[] pcm, double[][] ffts)
+		private void DrawDiagrams(short[][] pcms, double[][] ffts)
 		{
 			audioDataGfx.Clear(picAudioData.BackColor);
 			fftGfx1.Clear(picAudioData.BackColor);

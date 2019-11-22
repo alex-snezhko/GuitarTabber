@@ -9,33 +9,23 @@ namespace GuitarTabber
 {
 	class AudioBuffer
 	{
-		public static BufferedWaveProvider pcmBuffer;
-		public static short[] pcm;
-
-		public int BufferLength { get; }
+		public BufferedWaveProvider pcmBuffer;
+		public short[] pcm;
 		public double FrequencyResolution { get; }
 
+		public double[] FFT { get; private set; }
+
 		List<double[]> fftAmbientNoiseLevelSamples;
-		// array of ambient noise levels in environment at each given fft frequency
-		double[] fftAmbientNoiseLevels;
-		public double[] FftAmbientNoiseLevels { get => fftAmbientNoiseLevels; }
+		public double[] FFTAmbientNoiseLevels { get; private set; }
 
-		public AudioBuffer(int bufferLen, double freqResolution)
+		public AudioBuffer(double freqResolution)
 		{
-			BufferLength = bufferLen;
 			FrequencyResolution = freqResolution;
-
 			fftAmbientNoiseLevelSamples = new List<double[]>();
 		}
 
-		// returns success status
-		public static bool ExtractPcm()
+		public void RefreshData()
 		{
-			if (pcmBuffer.BufferedDuration != pcmBuffer.BufferDuration)
-			{
-				return false;
-			}
-
 			byte[] data8Bit = new byte[pcmBuffer.BufferLength];
 			pcmBuffer.Read(data8Bit, 0, pcmBuffer.BufferLength);
 
@@ -50,7 +40,8 @@ namespace GuitarTabber
 			}
 
 			pcm = data16Bit;
-			return true;
+
+			FFT = CalculateFFT();
 		}
 
 		public bool AddAmbientLevelSample()
@@ -60,30 +51,31 @@ namespace GuitarTabber
 				return false;
 			}
 
-			double[] fft = GetFFT();
+			double[] fft = CalculateFFT();
 			fftAmbientNoiseLevelSamples.Add(fft);
 
 			if (fftAmbientNoiseLevelSamples.Count == 10)
 			{
-				fftAmbientNoiseLevels = new double[fft.Length];
-				for (int i = 0; i < fftAmbientNoiseLevels.Length; i++)
+				FFTAmbientNoiseLevels = new double[fft.Length];
+				for (int i = 0; i < FFTAmbientNoiseLevels.Length; i++)
 				{
 					double max = 0;
 					for (int listIndex = 0; listIndex < fftAmbientNoiseLevelSamples.Count; listIndex++)
 					{
 						max = Math.Max(max, fftAmbientNoiseLevelSamples[listIndex][i]);
 					}
-					fftAmbientNoiseLevels[i] = max;
+					FFTAmbientNoiseLevels[i] = max;
 				}
 			}
 			return true;
 		}
 
-		public double[] GetFFT()
+		double[] CalculateFFT()
 		{
-			double[] real = new double[BufferLength];
-			double[] imag = new double[BufferLength];
-			for (int i = 0; i < BufferLength; i++)
+			int len = pcmBuffer.BufferLength / 2;
+			double[] real = new double[len];
+			double[] imag = new double[len];
+			for (int i = 0; i < len; i++)
 			{
 				real[i] = pcm[i];
 			}
