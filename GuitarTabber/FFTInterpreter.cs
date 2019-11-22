@@ -17,7 +17,7 @@ namespace GuitarTabber
 				AudioBuffer buf = null;
 				foreach (AudioBuffer b in buffers)
 				{
-					if (IsPeak(b, i) && !IsHarmonic(b, i))
+					if (IsPeak(b, i) && !IsHarmonic(b, firstHarmonics, i))
 					{
 						buf = b;
 						break;
@@ -29,18 +29,18 @@ namespace GuitarTabber
 					continue;
 				}
 
-				// check if each fft has a valid peak (is actually a peak and has harmonics)
-				bool valid;
+				// check if each fft has a valid peak
+				bool peak = false;
 				// first harmonic frequencies according to each buffer frequency resolution
-				List<double> firstHarmonicsInBuffers = new List<double>();
+				List<double> peakFreqsInBuffers = new List<double>();
 				foreach (AudioBuffer other in buffers)
 				{
 					if (other == buf)
 					{
 						continue;
 					}
-					// initially assume this buffer fft does not have a valid first harmonic here
-					valid = false;
+					// initially assume this buffer fft does not have a valid peak
+					peak = false;
 
 					// find location of this frequency in other buffers with varying frequency resolutions
 					double coeff = buf.FrequencyResolution / other.FrequencyResolution;
@@ -49,285 +49,98 @@ namespace GuitarTabber
 					for (int check = lowBound; check <= upBound; check++)
 					{
 						// check that peak exists in other buffers
-						if (IsPeak(other, check))
+						if (IsPeak(other, check) && !IsHarmonic(other, firstHarmonics, check))
 						{
-							// check that peak has reasonable amount of harmonics
-							int maximumHarmonics = other.FFT.Length / check;
-							int numHarmonics = FindHarmonics(other, check).Count;
-							if (numHarmonics / 2 < maximumHarmonics)
-							{
-								valid = false;
-								break;
-							}
-							firstHarmonicsInBuffers.Add(check * other.FrequencyResolution);
+							peak = true;
+							peakFreqsInBuffers.Add(check * other.FrequencyResolution);
+							break;
 						}
 					}
 
-					if (!valid)
+					// doesn't check other buffer ffts if one was found to be invalid
+					if (!peak)
 					{
 						break;
 					}
-
 				}
 
-				if (valid)
+				if (peak)
 				{
-					firstHarmonics.Add(firstHarmonicsInBuffers.Average());
+					firstHarmonics.Add(peakFreqsInBuffers.Average());
 				}
 			}
 
 			return firstHarmonics;
+		}
 
-			// finds whether or not a given index is a relative peak
-			bool IsPeak(AudioBuffer buf, int index)
+		// finds whether or not a given index is a relative peak
+		static bool IsPeak(AudioBuffer buf, int index)
+		{
+			double[] fft = buf.FFT;
+			if (index < 0 || index >= fft.Length || fft[index] <= buf.FFTAmbientNoiseLevels[index] * 2.5)
 			{
-				double[] fft = buf.FFT;
-				if (index < 0 || index >= fft.Length || fft[index] <= buf.FFTAmbientNoiseLevels[index] * 2.5)
+				return false;
+			}
+
+			for (int comp = index - 1; comp <= index + 1; comp++)
+			{
+				bool validIndex = comp != index && comp >= 0 && comp < fft.Length;
+				if (validIndex && fft[index] < fft[comp])
 				{
 					return false;
 				}
-
-				for (int comp = index - 1; comp <= index + 1; comp++)
-				{
-					bool validIndex = comp != index && comp >= 0 && comp < fft.Length;
-					if (validIndex && fft[index] < fft[comp])
-					{
-						return false;
-					}
-				}
-
-				return true;
 			}
 
-			// finds whether or not a given index is a harmonic of a note already found
-			bool IsHarmonic(AudioBuffer buf, int index)
-			{
-				double freqResolution = buf.FrequencyResolution;
-
-				double thisFreq = index * freqResolution;
-
-				// allows some tolerance for the possibile loss of precision due to coarse fft frequency resolution
-				double upperBound = (index + 1) * freqResolution;
-				double lowerBound = (index - 1) * freqResolution;
-
-				return firstHarmonics.Any(e => e >= lowerBound && e <= upperBound);
-			}
-
-			List<int> FindHarmonics(AudioBuffer buf, int index)
-			{
-				double[] fft = buf.FFT;
-
-				List<int> harmonics = new List<int>();
-				harmonics.Add(index);
-
-				for (int harmonicNum = 2; harmonicNum * index < fft.Length; harmonicNum++)
-				{
-					int upperBound = harmonicNum * (index + 1);
-					int lowerBound = harmonicNum * (index - 1);
-
-					for (int searchIndex = lowerBound; searchIndex <= upperBound; searchIndex++)
-					{
-						if (IsPeak(buf, searchIndex))
-						{
-							harmonics.Add(searchIndex);
-							break;
-						}
-					}
-				}
-
-				return harmonics;
-			}
-
-			/*int num;
-			for (num = 0; num < 5; num++)
-			{
-				double[] fft = ffts[num];
-
-				
-
-				for (int i = 0; i < 1320 / buffers[num].FrequencyResolution; i++)
-				{
-					// add a frequency to the list of peaks if it is higher than surrounding frequencies
-					if (IsPeak(fft, i) && !IsHarmonic(firstHarmonics, i))
-					{
-						// maximum possible number of harmonics that the length of fft array will allow to be found
-						int maxNumHarmonics = fft.Length / i;
-						List<int> harmonics = FindHarmonics(fft, i);
-						// ignore if very few harmonics were found (for the case where 'harmonics' were found coincidentally in distortion)
-						if (harmonics.Count < maxNumHarmonics / 2)
-						{
-							continue;
-						}
-
-						// try to find actual first harmonic in the case that a second, third, etc harmonic was found
-						// (this will only apply to the case where this fact was not discovered earlier)
-						int actualFirstHarmonic = i;
-						int possibleFirstHarmonic;
-						for (int divide = 2; (possibleFirstHarmonic = i / divide) >= 80 / buffers[num].FrequencyResolution; divide++) // TODO use prime numbers
-						{
-							List<int> quotientHarmonics = FindHarmonics(fft, possibleFirstHarmonic);
-							if (quotientHarmonics.Count >= harmonics.Count)
-							{
-								harmonics = quotientHarmonics;
-								actualFirstHarmonic = possibleFirstHarmonic;
-							}
-						}
-						firstHarmonics.Add(actualFirstHarmonic);
-					}
-				}
-
-				freqsList[num] = firstHarmonics;
-			}
-
-			return freqsList;*/
-
-
-
-
-
-
+			return true;
 		}
 
-		//// finds whether or not a given index is a relative peak
-		//static bool IsPeak(double[] fft, double[] ambientNoiseLevels, int index)
-		//{
-		//	if (index < 0 || index >= fft.Length || fft[index] <= ambientNoiseLevels[index] * 2.5)
-		//	{
-		//		return false;
-		//	}
-
-		//	for (int comp = index - 1; comp <= index + 1; comp++)
-		//	{
-		//		bool validIndex = comp != index && comp >= 0 && comp < fft.Length;
-		//		if (validIndex && fft[index] < fft[comp])
-		//		{
-		//			return false;
-		//		}
-		//	}
-
-		//	return true;
-		//}
-
-		//// finds whether or not a given index is a harmonic of a note already found
-		//static bool IsHarmonic(List<double> firstHarmonics, int index, double freqResolution)
-		//{
-		//	double thisFreq = index * freqResolution;
-
-		//	// allows some tolerance for the possibile loss of precision due to coarse fft frequency resolution
-		//	double upperBound = (index + 1) * freqResolution;
-		//	double lowerBound = (index - 1) * freqResolution;
-
-		//	return firstHarmonics.Any(e => e >= lowerBound && e <= upperBound);
-		//}
-
-		//static List<int> FindHarmonics(double[] fft, int index)
-		//{
-		//	List<int> harmonics = new List<int>();
-		//	harmonics.Add(index);
-
-		//	for (int harmonicNum = 2; harmonicNum * index < fft.Length; harmonicNum++)
-		//	{
-		//		int upperBound = harmonicNum * (index + 1);
-		//		int lowerBound = harmonicNum * (index - 1);
-
-		//		for (int searchIndex = lowerBound; searchIndex <= upperBound; searchIndex++)
-		//		{
-		//			if (IsPeak(fft, searchIndex))
-		//			{
-		//				harmonics.Add(searchIndex);
-		//				break;
-		//			}
-		//		}
-		//	}
-
-		//	return harmonics;
-		//}
-
-		/*static int[] DominantFrequencies(double[] fft)
+		// finds whether or not a given index is a harmonic of a note already found
+		static bool IsHarmonic(AudioBuffer buf, List<double> firstHarmonics, int index)
 		{
-			double avgVal = fft.Sum() / fft.Length;
+			double thisFreq = index * buf.FrequencyResolution;
+			// allows some tolerance for the possibile loss of precision due to coarse fft frequency resolution
+			double upperBound = (index + 1) * buf.FrequencyResolution;
+			double lowerBound = (index - 1) * buf.FrequencyResolution;
 
-			// make list of relatively high frequency peaks
-			List<int> highIndexes = new List<int>();
-			// number of surrounding values to compare each element to
-			const int COMP_RADIUS = 4;
-			for (int i = 0; i < fft.Length; i++)
+			foreach (double f in firstHarmonics)
 			{
-				if (fft[i] > avgVal)
+				double possibleHarmonic = f * Math.Round(thisFreq / f);
+				if (possibleHarmonic < 2)
 				{
-					bool highest = true;
-					for (int comp = i - COMP_RADIUS; comp <= i + COMP_RADIUS; comp++)
-					{
-						if (comp == i || comp < 0 || comp >= fft.Length)
-						{
-							continue;
-						}
+					return false;
+				}
+				if (possibleHarmonic >= lowerBound && possibleHarmonic <= upperBound)
+				{
+					return true;
+				}
+			}
 
-						if (fft[i] < fft[comp])
-						{
-							highest = false;
-							break;
-						}
-					}
+			return false;
+		}
 
-					// add a frequency to the list of peaks if it is higher than surrounding frequencies
-					if (highest)
+		static List<int> FindHarmonics(AudioBuffer buf, int index)
+		{
+			double[] fft = buf.FFT;
+
+			List<int> harmonics = new List<int>();
+			harmonics.Add(index);
+
+			for (int harmonicNum = 2; harmonicNum * index < fft.Length; harmonicNum++)
+			{
+				int upperBound = harmonicNum * (index + 1);
+				int lowerBound = harmonicNum * (index - 1);
+
+				for (int searchIndex = lowerBound; searchIndex <= upperBound; searchIndex++)
+				{
+					if (IsPeak(buf, searchIndex))
 					{
-						highIndexes.Add(i);
+						harmonics.Add(searchIndex);
+						break;
 					}
 				}
 			}
 
-			double[] highVals = new double[highIndexes.Count];
-			for (int i = 0; i < highVals.Length; i++)
-			{
-				highVals[i] = fft[highIndexes[i]];
-			}
-			// sorts in descending order
-			highIndexes.Sort((x, y) => (int)(fft[y] - fft[x]));
-
-			double[] ohighVals = new double[highIndexes.Count];
-			for (int i = 0; i < ohighVals.Length; i++)
-			{
-				ohighVals[i] = fft[highIndexes[i]];
-			}
-
-			// gets top 5 highest dominant frequencies
-			const int N = 5;
-			int[] topN = new int[N];
-			if (highIndexes.Count >= 5)
-			{
-				highIndexes.CopyTo(0, topN, 0, N);
-				Array.Sort(topN);
-			}
-			
-
-			return topN;
-		}*/
-
-		/*static int ValidDiff(int[] topN)
-		{
-			int smallestDiff = topN[1] - topN[0];
-			for (int i = 1; i < topN.Length - 1; i++)
-			{
-				if (topN[i + 1] - topN[i] < smallestDiff)
-				{
-					smallestDiff = topN[i + 1] - topN[i];
-				}
-			}
-
-			for (int i = 0; i < topN.Length - 1; i++)
-			{
-				double diffsBetween = topN[i + 1] - topN[i] / (double)smallestDiff;
-				double integralDiffs = Math.Round(diffsBetween);
-
-				if (Math.Abs(diffsBetween - integralDiffs) / diffsBetween > 0.03)
-				{
-					return 0;
-				}
-			}
-
-			return smallestDiff;
-		}*/
+			return harmonics;
+		}
 	}
 }
