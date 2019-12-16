@@ -49,6 +49,7 @@ namespace GuitarTabber
 
 		private void TmrReadAudio_Tick(object sender, EventArgs e)
 		{
+			DateTime t = DateTime.Now;
 			tmrReadAudio.Stop();
 
 			if (!GatherInput())
@@ -88,7 +89,8 @@ namespace GuitarTabber
 				}
 			}
 
-
+			double dt = (DateTime.Now - t).TotalMilliseconds;
+			Console.WriteLine(dt.ToString());
 
 
 

@@ -27,13 +27,19 @@ namespace GuitarTabber
 			if (WaveIn.DeviceCount < 1)
 			{
 				throw new Exception("No audio device connected");
-			}	
+			}
 
-			double[] freqResolutions = { 4.9, 5.9, 6.9, 7.9, 8.9 };
-			int[] samplingFreqs = new int[5];
-			buffers = new AudioBuffer[5];
-			inputs = new WaveIn[5];
-			for (int i = 0; i < 5; i++)
+			const int NUM_BUFFERS = 9;
+
+			double[] freqResolutions = new double[NUM_BUFFERS];
+			for (int i = 0; i < NUM_BUFFERS; i++)
+			{
+				freqResolutions[i] = 10.0 + (10.0 / NUM_BUFFERS) * i;
+			}
+			int[] samplingFreqs = new int[NUM_BUFFERS];
+			buffers = new AudioBuffer[NUM_BUFFERS];
+			inputs = new WaveIn[NUM_BUFFERS];
+			for (int i = 0; i < NUM_BUFFERS; i++)
 			{
 				samplingFreqs[i] = (int)(freqResolutions[i] * BUFFER_LENGTH_16);
 				buffers[i] = new AudioBuffer(freqResolutions[i]);
@@ -71,6 +77,8 @@ namespace GuitarTabber
 				return false;
 			}
 
+			
+
 			foreach (AudioBuffer buf in buffers)
 			{
 				buf.RefreshData();
@@ -87,6 +95,7 @@ namespace GuitarTabber
 					}
 				}
 			}
+			
 
 			return true;
 		}

@@ -14,6 +14,7 @@ namespace GuitarTabber
 		public double FrequencyResolution { get; }
 
 		public double[] FFT { get; private set; }
+		public const double FFT_HIGHEST_FREQ = 5280;
 
 		List<double[]> fftAmbientNoiseLevelSamples;
 		public double[] FFTAmbientNoiseLevels { get; private set; }
@@ -81,17 +82,11 @@ namespace GuitarTabber
 			}
 			FourierTransform2.FFT(real, imag, FourierTransform.Direction.Forward);
 
-			// open low e string: 82.4 Hz, F24 high e: 1318.5 Hz
-			const double LOWEST_FREQ = 0;
-			const double HIGHEST_FREQ = 330 * 16;
-
-			// indexes of lower and upper bound freqs in FFT
-			int start = (int)(LOWEST_FREQ / FrequencyResolution);
-			int end = (int)(HIGHEST_FREQ / FrequencyResolution);
-			double[] freqs = new double[end - start];
+			int high = (int)(FFT_HIGHEST_FREQ / FrequencyResolution);
+			double[] freqs = new double[high];
 			for (int i = 10; i < freqs.Length; i++)
 			{
-				freqs[i] = Math.Sqrt((real[start + i] * real[start + i]) + (imag[start + i] * imag[start + i]));
+				freqs[i] = Math.Sqrt((real[i] * real[i]) + (imag[i] * imag[i]));
 			}
 
 			return freqs;
