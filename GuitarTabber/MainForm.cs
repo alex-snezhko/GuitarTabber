@@ -27,6 +27,10 @@ namespace GuitarTabber
 		Graphics fftGfx3;
 		Graphics fftGfx4;
 		Graphics fftGfx5;
+		Graphics fftGfx6;
+		Graphics fftGfx7;
+		Graphics fftGfx8;
+		Graphics fftGfx9;
 
 		public MainForm()
 		{
@@ -42,6 +46,10 @@ namespace GuitarTabber
 			fftGfx3 = picFFT3.CreateGraphics();
 			fftGfx4 = picFFT4.CreateGraphics();
 			fftGfx5 = picFFT5.CreateGraphics();
+			fftGfx6 = picFFT6.CreateGraphics();
+			fftGfx7 = picFFT7.CreateGraphics();
+			fftGfx8 = picFFT8.CreateGraphics();
+			fftGfx9 = picFFT9.CreateGraphics();
 			audioDataGfx = picAudioData.CreateGraphics();
 
 			Init();
@@ -62,24 +70,24 @@ namespace GuitarTabber
 			{
 				btnBeginAnalyzing.BackColor = Color.Red;
 
-				short[][] pcms = new short[5][];
-				for (int i = 0; i < 5; i++)
+				short[][] pcms = new short[9][];
+				for (int i = 0; i < 9; i++)
 				{
 					pcms[i] = Buffers[i].pcm;
 				}
-				double[][] ffts = new double[5][];
-				for (int i = 0; i < 5; i++)
+				double[][] ffts = new double[9][];
+				for (int i = 0; i < 9; i++)
 				{
 					ffts[i] = Buffers[i].FFT;
 				}
 
-				DrawDiagrams(pcms, ffts);
+				
 
 				if (pcms[0].Max() > 350)
 				{
-					
+					DrawDiagrams(pcms, ffts);
 
-					List<double> dominantFreqs = FFTInterpreter.DominantFreqs(Buffers);
+					List<double> dominantFreqs = FFTInterpreter.NoteFreqs(Buffers);
 					//for (int i = 0; i < 5; i++)
 					//{
 					//	actualFreqs[i] = dominantFreqs[i][0] * Buffers[i].FrequencyResolution;
@@ -117,6 +125,10 @@ namespace GuitarTabber
 			fftGfx3.Clear(picAudioData.BackColor);
 			fftGfx4.Clear(picAudioData.BackColor);
 			fftGfx5.Clear(picAudioData.BackColor);
+			fftGfx6.Clear(picAudioData.BackColor);
+			fftGfx7.Clear(picAudioData.BackColor);
+			fftGfx8.Clear(picAudioData.BackColor);
+			fftGfx9.Clear(picAudioData.BackColor);
 
 			Pen blackPen = new Pen(Color.Black);
 			Pen redPen = new Pen(Color.Red);
@@ -199,6 +211,54 @@ namespace GuitarTabber
 			fftGfx5.DrawLine(blackPen, 0, 0, 0, picFFT1.Height);
 			fftGfx5.DrawLine(blackPen, 0, picFFT1.Height - 1, picFFT1.Width, picFFT1.Height - 1);
 			fftGfx5.DrawLine(blackPen, picFFT1.Width / 16, 0, picFFT1.Width / 16, picFFT1.Height / 2);
+
+			valToXPixCoeffFFT = picFFT1.Width / (double)ffts[5].Length;
+			for (int i = 0; i < ffts[5].Length; i++)
+			{
+				int x = (int)(i * valToXPixCoeffFFT) + 1;
+				int height = (int)(ffts[5][i] * valToYPixCoeffFFT);
+				fftGfx6.DrawLine(redPen, x, picFFT1.Height, x, picFFT1.Height - height);
+			}
+
+			fftGfx6.DrawLine(blackPen, 0, 0, 0, picFFT1.Height);
+			fftGfx6.DrawLine(blackPen, 0, picFFT1.Height - 1, picFFT1.Width, picFFT1.Height - 1);
+			fftGfx6.DrawLine(blackPen, picFFT1.Width / 16, 0, picFFT1.Width / 16, picFFT1.Height / 2);
+
+			valToXPixCoeffFFT = picFFT1.Width / (double)ffts[6].Length;
+			for (int i = 0; i < ffts[6].Length; i++)
+			{
+				int x = (int)(i * valToXPixCoeffFFT) + 1;
+				int height = (int)(ffts[6][i] * valToYPixCoeffFFT);
+				fftGfx7.DrawLine(redPen, x, picFFT1.Height, x, picFFT1.Height - height);
+			}
+
+			fftGfx7.DrawLine(blackPen, 0, 0, 0, picFFT1.Height);
+			fftGfx7.DrawLine(blackPen, 0, picFFT1.Height - 1, picFFT1.Width, picFFT1.Height - 1);
+			fftGfx7.DrawLine(blackPen, picFFT1.Width / 16, 0, picFFT1.Width / 16, picFFT1.Height / 2);
+
+			valToXPixCoeffFFT = picFFT1.Width / (double)ffts[7].Length;
+			for (int i = 0; i < ffts[7].Length; i++)
+			{
+				int x = (int)(i * valToXPixCoeffFFT) + 1;
+				int height = (int)(ffts[7][i] * valToYPixCoeffFFT);
+				fftGfx8.DrawLine(redPen, x, picFFT1.Height, x, picFFT1.Height - height);
+			}
+
+			fftGfx8.DrawLine(blackPen, 0, 0, 0, picFFT1.Height);
+			fftGfx8.DrawLine(blackPen, 0, picFFT1.Height - 1, picFFT1.Width, picFFT1.Height - 1);
+			fftGfx8.DrawLine(blackPen, picFFT1.Width / 16, 0, picFFT1.Width / 16, picFFT1.Height / 2);
+
+			valToXPixCoeffFFT = picFFT1.Width / (double)ffts[8].Length;
+			for (int i = 0; i < ffts[8].Length; i++)
+			{
+				int x = (int)(i * valToXPixCoeffFFT) + 1;
+				int height = (int)(ffts[8][i] * valToYPixCoeffFFT);
+				fftGfx9.DrawLine(redPen, x, picFFT1.Height, x, picFFT1.Height - height);
+			}
+
+			fftGfx9.DrawLine(blackPen, 0, 0, 0, picFFT1.Height);
+			fftGfx9.DrawLine(blackPen, 0, picFFT1.Height - 1, picFFT1.Width, picFFT1.Height - 1);
+			fftGfx9.DrawLine(blackPen, picFFT1.Width / 16, 0, picFFT1.Width / 16, picFFT1.Height / 2);
 
 			blackPen.Dispose();
 			redPen.Dispose();
