@@ -13,9 +13,11 @@ namespace GuitarTabber
 {
 	static class AudioInput
 	{
-		static WaveIn[] inputs;
+		static WaveIn input;
 
 		public const int BUFFER_LENGTH_16 = 2048;
+
+		public const int SAMPLING_RATE = (int)(AudioBuffer.FREQ_RESOLUTION * BUFFER_LENGTH_16);
 
 		static AudioBuffer[] buffers;
 		public static AudioBuffer[] Buffers { get => buffers; }
@@ -29,59 +31,43 @@ namespace GuitarTabber
 				throw new Exception("No audio device connected");
 			}
 
-			const int NUM_BUFFERS = 9;
-
-			double[] freqResolutions = new double[NUM_BUFFERS];
-			for (int i = 0; i < NUM_BUFFERS; i++)
-			{
-				freqResolutions[i] = 10.0 + (10.0 / NUM_BUFFERS) * i;
-			}
-			int[] samplingFreqs = new int[NUM_BUFFERS];
-			buffers = new AudioBuffer[NUM_BUFFERS];
-			inputs = new WaveIn[NUM_BUFFERS];
-			for (int i = 0; i < NUM_BUFFERS; i++)
-			{
-				samplingFreqs[i] = (int)(freqResolutions[i] * BUFFER_LENGTH_16);
-				buffers[i] = new AudioBuffer(freqResolutions[i]);
-
-				inputs[i] = new WaveIn
-				{
-					DeviceNumber = 0,
-					WaveFormat = new WaveFormat(samplingFreqs[i], 16, 1)
-				};
-
-				buffers[i].pcmBuffer = new BufferedWaveProvider(inputs[i].WaveFormat)
-				{
-					DiscardOnBufferOverflow = true,
-					BufferLength = 2 * BUFFER_LENGTH_16
-				};
-
-				BufferedWaveProvider buf = buffers[i].pcmBuffer;
-
-				inputs[i].DataAvailable += (s, args) => buf.AddSamples(args.Buffer, 0, args.BytesRecorded);
-			}
-
+			const int NUM_BUFFERS = 10;
 			
-
-			foreach (WaveIn wi in inputs)
+			input = new WaveIn
 			{
-				wi.StartRecording();
+				DeviceNumber = 0,
+				WaveFormat = new WaveFormat(SAMPLING_RATE, 16, 1)
+			};
+
+			AudioBuffer.PcmBuffer = new BufferedWaveProvider(input.WaveFormat)
+			{
+				DiscardOnBufferOverflow = true,
+				BufferLength = 2 * BUFFER_LENGTH_16
+			};
+			input.DataAvailable += (s, args) => AudioBuffer.PcmBuffer.AddSamples(args.Buffer, 0, args.BytesRecorded);
+
+			buffers = new AudioBuffer[NUM_BUFFERS];
+			for (int i = 0; i < NUM_BUFFERS; i++)
+			{
+				buffers[i] = new AudioBuffer(i);
 			}
+
+			input.StartRecording();
 		}
 
 		public static bool GatherInput()
 		{
-			BufferedWaveProvider bwp = buffers[0].pcmBuffer;
+			BufferedWaveProvider bwp = AudioBuffer.PcmBuffer;
 			if (bwp.BufferedBytes != bwp.BufferLength)
 			{
 				return false;
 			}
-
+			AudioBuffer.RefreshPCM();
 			
 
 			foreach (AudioBuffer buf in buffers)
 			{
-				buf.RefreshData();
+				buf.CalculateFFT();
 			}
 
 			if (!ambientGathered)

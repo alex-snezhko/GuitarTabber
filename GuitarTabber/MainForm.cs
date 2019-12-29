@@ -7,6 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Accord.Math;
+using Accord.Math.Transforms;
 using GuitarTabber.Properties;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
@@ -70,35 +72,57 @@ namespace GuitarTabber
 			{
 				btnBeginAnalyzing.BackColor = Color.Red;
 
-				short[][] pcms = new short[9][];
-				for (int i = 0; i < 9; i++)
+				short[] pcm = AudioBuffer.pcm;
+
+				/////
+				/*double[] windowed = FFTInterpreter.WindowedPCM(pcm);
+				const int LEN = AudioInput.BUFFER_LENGTH_16 - 10;
+				double[] real = new double[LEN];
+				double[] imag = new double[LEN];
+				for (int i = 0; i < LEN; i++)
 				{
-					pcms[i] = Buffers[i].pcm;
+					real[i] = windowed[i];
 				}
-				double[][] ffts = new double[9][];
-				for (int i = 0; i < 9; i++)
+				FourierTransform2.FFT(real, imag, FourierTransform.Direction.Forward);
+
+				const int HIGH = (int)(AudioBuffer.FFT_HIGHEST_FREQ / AudioBuffer.FREQ_RESOLUTION);
+				double[] windowedFFT = new double[HIGH];
+				for (int i = 7; i < windowedFFT.Length; i++)
+				{
+					windowedFFT[i] = Math.Sqrt((real[i] * real[i]) + (imag[i] * imag[i]));
+				}*/
+				////
+
+
+				double[][] ffts = new double[10][];
+				for (int i = 0; i < ffts.Length; i++)
 				{
 					ffts[i] = Buffers[i].FFT;
 				}
 
 				
 
-				if (pcms[0].Max() > 350)
+				if (pcm.Max() > 350)
 				{
-					DrawDiagrams(pcms, ffts);
-
-					List<double> dominantFreqs = FFTInterpreter.NoteFreqs(Buffers);
-					//for (int i = 0; i < 5; i++)
-					//{
-					//	actualFreqs[i] = dominantFreqs[i][0] * Buffers[i].FrequencyResolution;
-					//}
-					//double avg = actualFreqs.Average();
+					//DrawDiagrams(pcm, ffts);
+					DateTime tb = DateTime.Now;
+					for (int i = 0; i < 1000; i++)
+					{
+						List<double> dominantFreqs = FFTInterpreter.NoteFreqs(Buffers);
+					}
+					Console.WriteLine((DateTime.Now - tb).TotalMilliseconds / 1000);
+					string s = "";
+					/*foreach (double f in dominantFreqs)
+					{
+						s += f.ToString("F3") + ", ";
+					}
+					lblFreqs.Text = s;*/
 
 				}
 			}
 
 			double dt = (DateTime.Now - t).TotalMilliseconds;
-			Console.WriteLine(dt.ToString());
+			//Console.WriteLine(dt.ToString());
 
 
 
@@ -117,7 +141,7 @@ namespace GuitarTabber
 
 		}
 
-		private void DrawDiagrams(short[][] pcms, double[][] ffts)
+		private void DrawDiagrams(short[] pcm, double[][] ffts)
 		{
 			audioDataGfx.Clear(picAudioData.BackColor);
 			fftGfx1.Clear(picAudioData.BackColor);

@@ -62,6 +62,7 @@
 			this.picFFT7 = new System.Windows.Forms.PictureBox();
 			this.picFFT8 = new System.Windows.Forms.PictureBox();
 			this.picFFT9 = new System.Windows.Forms.PictureBox();
+			this.lblFreqs = new System.Windows.Forms.Label();
 			((System.ComponentModel.ISupportInitialize)(this.udBpm)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.picFFT1)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.picAudioData)).BeginInit();
@@ -250,9 +251,9 @@
 			// picFFT1
 			// 
 			this.picFFT1.BackColor = System.Drawing.Color.White;
-			this.picFFT1.Location = new System.Drawing.Point(32, 92);
+			this.picFFT1.Location = new System.Drawing.Point(32, 95);
 			this.picFFT1.Name = "picFFT1";
-			this.picFFT1.Size = new System.Drawing.Size(980, 90);
+			this.picFFT1.Size = new System.Drawing.Size(980, 80);
 			this.picFFT1.TabIndex = 20;
 			this.picFFT1.TabStop = false;
 			// 
@@ -300,80 +301,89 @@
 			// picFFT2
 			// 
 			this.picFFT2.BackColor = System.Drawing.Color.White;
-			this.picFFT2.Location = new System.Drawing.Point(32, 188);
+			this.picFFT2.Location = new System.Drawing.Point(32, 181);
 			this.picFFT2.Name = "picFFT2";
-			this.picFFT2.Size = new System.Drawing.Size(980, 90);
+			this.picFFT2.Size = new System.Drawing.Size(980, 80);
 			this.picFFT2.TabIndex = 25;
 			this.picFFT2.TabStop = false;
 			// 
 			// picFFT3
 			// 
 			this.picFFT3.BackColor = System.Drawing.Color.White;
-			this.picFFT3.Location = new System.Drawing.Point(32, 284);
+			this.picFFT3.Location = new System.Drawing.Point(32, 267);
 			this.picFFT3.Name = "picFFT3";
-			this.picFFT3.Size = new System.Drawing.Size(980, 90);
+			this.picFFT3.Size = new System.Drawing.Size(980, 80);
 			this.picFFT3.TabIndex = 26;
 			this.picFFT3.TabStop = false;
 			// 
 			// picFFT4
 			// 
 			this.picFFT4.BackColor = System.Drawing.Color.White;
-			this.picFFT4.Location = new System.Drawing.Point(32, 380);
+			this.picFFT4.Location = new System.Drawing.Point(32, 353);
 			this.picFFT4.Name = "picFFT4";
-			this.picFFT4.Size = new System.Drawing.Size(980, 90);
+			this.picFFT4.Size = new System.Drawing.Size(980, 80);
 			this.picFFT4.TabIndex = 27;
 			this.picFFT4.TabStop = false;
 			// 
 			// picFFT5
 			// 
 			this.picFFT5.BackColor = System.Drawing.Color.White;
-			this.picFFT5.Location = new System.Drawing.Point(32, 476);
+			this.picFFT5.Location = new System.Drawing.Point(32, 439);
 			this.picFFT5.Name = "picFFT5";
-			this.picFFT5.Size = new System.Drawing.Size(980, 90);
+			this.picFFT5.Size = new System.Drawing.Size(980, 80);
 			this.picFFT5.TabIndex = 28;
 			this.picFFT5.TabStop = false;
 			// 
 			// picFFT6
 			// 
 			this.picFFT6.BackColor = System.Drawing.Color.White;
-			this.picFFT6.Location = new System.Drawing.Point(32, 572);
+			this.picFFT6.Location = new System.Drawing.Point(32, 525);
 			this.picFFT6.Name = "picFFT6";
-			this.picFFT6.Size = new System.Drawing.Size(980, 90);
+			this.picFFT6.Size = new System.Drawing.Size(980, 80);
 			this.picFFT6.TabIndex = 29;
 			this.picFFT6.TabStop = false;
 			// 
 			// picFFT7
 			// 
 			this.picFFT7.BackColor = System.Drawing.Color.White;
-			this.picFFT7.Location = new System.Drawing.Point(32, 668);
+			this.picFFT7.Location = new System.Drawing.Point(32, 611);
 			this.picFFT7.Name = "picFFT7";
-			this.picFFT7.Size = new System.Drawing.Size(980, 90);
+			this.picFFT7.Size = new System.Drawing.Size(980, 80);
 			this.picFFT7.TabIndex = 30;
 			this.picFFT7.TabStop = false;
 			// 
 			// picFFT8
 			// 
 			this.picFFT8.BackColor = System.Drawing.Color.White;
-			this.picFFT8.Location = new System.Drawing.Point(32, 764);
+			this.picFFT8.Location = new System.Drawing.Point(32, 697);
 			this.picFFT8.Name = "picFFT8";
-			this.picFFT8.Size = new System.Drawing.Size(980, 90);
+			this.picFFT8.Size = new System.Drawing.Size(980, 80);
 			this.picFFT8.TabIndex = 31;
 			this.picFFT8.TabStop = false;
 			// 
 			// picFFT9
 			// 
 			this.picFFT9.BackColor = System.Drawing.Color.White;
-			this.picFFT9.Location = new System.Drawing.Point(32, 860);
+			this.picFFT9.Location = new System.Drawing.Point(32, 783);
 			this.picFFT9.Name = "picFFT9";
-			this.picFFT9.Size = new System.Drawing.Size(980, 90);
+			this.picFFT9.Size = new System.Drawing.Size(980, 80);
 			this.picFFT9.TabIndex = 32;
 			this.picFFT9.TabStop = false;
+			// 
+			// lblFreqs
+			// 
+			this.lblFreqs.AutoSize = true;
+			this.lblFreqs.Location = new System.Drawing.Point(1037, 276);
+			this.lblFreqs.Name = "lblFreqs";
+			this.lblFreqs.Size = new System.Drawing.Size(0, 13);
+			this.lblFreqs.TabIndex = 33;
 			// 
 			// MainForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(1242, 967);
+			this.ClientSize = new System.Drawing.Size(1242, 888);
+			this.Controls.Add(this.lblFreqs);
 			this.Controls.Add(this.picFFT9);
 			this.Controls.Add(this.picFFT8);
 			this.Controls.Add(this.picFFT7);
@@ -459,6 +469,7 @@
 		private System.Windows.Forms.PictureBox picFFT7;
 		private System.Windows.Forms.PictureBox picFFT8;
 		private System.Windows.Forms.PictureBox picFFT9;
+		private System.Windows.Forms.Label lblFreqs;
 	}
 }
 

@@ -11,13 +11,42 @@ namespace GuitarTabber
 		// considers notes that are less than a quarter note away as the same note
 		const double QTR_NOTE_INCREASE = 1.01454533493;
 
+		public static double[] WindowedPCM(short[] pcm)
+		{
+			double[] coefficients =
+			{
+				0.27105140069342,
+				-0.43329793923448,
+				0.21812299954311,
+				-0.06592544638803,
+				0.01081174209837,
+				-0.00077658482522,
+				0.00001388721735
+			};
+
+			// seven term blackman harris window
+			double[] ret = new double[pcm.Length];
+			pcm.CopyTo(ret, 0);
+
+			for (int i = 0; i < pcm.Length; i++)
+			{
+				double result = 0.0;
+				for (int j = 0; j < 7; j++)
+				{
+					result += coefficients[j] * Math.Cos(2 * Math.PI * j * pcm[i] / pcm.Length);
+				}
+				ret[i] = result;
+			}
+			return ret;
+		}
+
 		public static List<double> NoteFreqs(AudioBuffer[] buffers)
 		{
 			////
-			foreach (AudioBuffer b in buffers)
+			/*foreach (AudioBuffer b in buffers)
 			{
-				Console.WriteLine(b.FrequencyResolution.ToString() + ": " + b.FFT.Max().ToString());
-			}////
+				Console.WriteLine(b.FFT.Max());
+			}////*/
 
 			List<double> noteFreqs = new List<double>();
 
@@ -43,7 +72,7 @@ namespace GuitarTabber
 				bool peakInAll = true;
 				// first harmonic frequencies according to each buffer frequency resolution
 				List<double> peakFreqsInBuffers = new List<double>();
-				peakFreqsInBuffers.Add(i * buf.FrequencyResolution);
+				peakFreqsInBuffers.Add(buf.Offset + i * AudioBuffer.FREQ_RESOLUTION);
 				foreach (AudioBuffer other in buffers)
 				{
 					if (other == buf)
@@ -53,18 +82,14 @@ namespace GuitarTabber
 					// initially assume this buffer fft does not have a valid peak
 					bool isPeak = false;
 
-					// find location of this frequency in other buffers with varying frequency resolutions
-					double coeff = buf.FrequencyResolution / other.FrequencyResolution;
-					int lowBound = (int)(i * coeff);
-					// allow some tolerance for possible roundoff error
-					int upBound = (int)((i + 1) * coeff);
-					for (int searchIndex = lowBound; searchIndex <= upBound; searchIndex++)
+					int lowBound = other.Offset < buf.Offset ? i : i - 1;
+					for (int searchIndex = lowBound; searchIndex <= lowBound + 1; searchIndex++)
 					{
 						// check that peak exists in other buffers
 						if (IsPeakInBuffer(other, searchIndex))
 						{
 							isPeak = true;
-							peakFreqsInBuffers.Add(searchIndex * other.FrequencyResolution);
+							peakFreqsInBuffers.Add(other.Offset + searchIndex * AudioBuffer.FREQ_RESOLUTION);
 							break;
 						}
 					}
@@ -80,6 +105,7 @@ namespace GuitarTabber
 				// at this point there is a fair amount of confidence that this is not a coincidental peak; verify again now based on presence of harmonics
 				if (peakInAll)
 				{
+					// TODO improve runtime
 					// initially assume that this frequency has the most harmonics
 					double freq = peakFreqsInBuffers.Average();
 					double ___Origfreq = freq;///// debug
@@ -107,13 +133,13 @@ namespace GuitarTabber
 					{
 						if (!AlreadyFound(noteFreqs, freq))
 						{
-							Console.WriteLine("Original: " + ___Origfreq + "; " + harmonicsRequired + " harmonics");
+							//Console.WriteLine("Original: " + ___Origfreq + "; " + harmonicsRequired + " harmonics");
 							noteFreqs.Add(freq);
 						}
 					}
 				}
 			}
-
+			
 			return noteFreqs;
 		}
 
@@ -121,7 +147,7 @@ namespace GuitarTabber
 		static bool IsPeakInBuffer(AudioBuffer buf, int index)
 		{
 			double[] fft = buf.FFT;
-			if (index >= fft.Length || fft[index] <= buf.FFTAmbientNoiseLevels[index] * 2.5)
+			if (index >= fft.Length || fft[index] <= buf.FFTAmbientNoiseLevels[index] * 1.5)
 			{
 				return false;
 			}
@@ -253,13 +279,13 @@ namespace GuitarTabber
 			double lowBound = targetFreq / QTR_NOTE_INCREASE;
 			double upBound = targetFreq * QTR_NOTE_INCREASE;
 
-			int lowBoundIndex = (int)(lowBound / buf.FrequencyResolution);
-			int upBoundIndex = (int)(upBound / buf.FrequencyResolution);
+			int lowBoundIndex = (int)(lowBound / AudioBuffer.FREQ_RESOLUTION);
+			int upBoundIndex = (int)(upBound / AudioBuffer.FREQ_RESOLUTION);
 			// finds the index in search that is closest to target frequency value
 			(double minDist, int index) = (double.MaxValue, 0);
 			for (int searchIndex = lowBoundIndex; searchIndex <= upBoundIndex; searchIndex++)
 			{
-				double thisDist = Math.Abs(searchIndex * buf.FrequencyResolution - targetFreq);
+				double thisDist = Math.Abs(searchIndex * AudioBuffer.FREQ_RESOLUTION - targetFreq);
 				if (thisDist >= minDist)
 				{
 					break;
@@ -278,7 +304,7 @@ namespace GuitarTabber
 				return false;
 			}
 
-			accurateFreq = index * buf.FrequencyResolution;
+			accurateFreq = index * AudioBuffer.FREQ_RESOLUTION;
 			return true;
 		}
 	}
