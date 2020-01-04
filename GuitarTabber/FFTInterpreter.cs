@@ -42,12 +42,6 @@ namespace GuitarTabber
 
 		public static List<double> NoteFreqs(AudioBuffer[] buffers)
 		{
-			////
-			/*foreach (AudioBuffer b in buffers)
-			{
-				Console.WriteLine(b.FFT.Max());
-			}////*/
-
 			List<double> noteFreqs = new List<double>();
 
 			int maxIndex = buffers[0].FFT.Length;
@@ -70,9 +64,10 @@ namespace GuitarTabber
 
 				// check if each fft has a valid peak
 				bool peakInAll = true;
-				// first harmonic frequencies according to each buffer frequency resolution
-				List<double> peakFreqsInBuffers = new List<double>();
-				peakFreqsInBuffers.Add(buf.Offset + i * AudioBuffer.FREQ_RESOLUTION);
+
+				// buffer with highest peak is considered most accurate for peak freq
+				double highest = buf.FFT[i] - buf.FFT[i - 1] - ((i < maxIndex - 1) ? buf.FFT[i + 1] : 0);//buf.FFT[i];
+				double freq = buf.Offset + i * AudioBuffer.FREQ_RESOLUTION;
 				foreach (AudioBuffer other in buffers)
 				{
 					if (other == buf)
@@ -89,7 +84,13 @@ namespace GuitarTabber
 						if (IsPeakInBuffer(other, searchIndex))
 						{
 							isPeak = true;
-							peakFreqsInBuffers.Add(other.Offset + searchIndex * AudioBuffer.FREQ_RESOLUTION);
+							double h = other.FFT[searchIndex] - other.FFT[searchIndex - 1] - searchIndex < maxIndex - 1 ? other.FFT[searchIndex + 1] : 0;
+							if (h > highest)
+							{
+								highest = h;//other.FFT[searchIndex];
+								freq = other.Offset + searchIndex * AudioBuffer.FREQ_RESOLUTION;
+							}
+
 							break;
 						}
 					}
@@ -105,37 +106,42 @@ namespace GuitarTabber
 				// at this point there is a fair amount of confidence that this is not a coincidental peak; verify again now based on presence of harmonics
 				if (peakInAll)
 				{
-					// TODO improve runtime
 					// initially assume that this frequency has the most harmonics
-					double freq = peakFreqsInBuffers.Average();
+					if (FundamentalAlreadyFound(noteFreqs, freq)) // TODO can move the contents of this method into loop line 121
+					{
+						continue;
+					}
+
 					double ___Origfreq = freq;///// debug
 					int harmonicsRequired = 4;
-					bool hasHarmonics = HasNHarmonics(buffers, harmonicsRequired++, ref freq);
+					bool hasHarmonics = HasNHarmonics(buffers, harmonicsRequired, ref freq);
+					harmonicsRequired += hasHarmonics ? 1 : 0;
 
+					double asdfasdf = 0;
 					foreach (double f in noteFreqs)
 					{
 						// this would only apply if the fundamental harmonic was not found earlier due to close proximity to another peak
 						double possibleFirstHarmonic = freq / Math.Round(freq / f);
+						if (FundamentalAlreadyFound(noteFreqs, possibleFirstHarmonic))
+						{
+							continue;
+						}
 
-						double ___Origquot = possibleFirstHarmonic;//////
-						bool moreInQuotient = HasNHarmonics(buffers, harmonicsRequired++, ref possibleFirstHarmonic);
+						bool moreInQuotient = HasNHarmonics(buffers, harmonicsRequired, ref possibleFirstHarmonic);
+
+						harmonicsRequired += moreInQuotient ? 1 : 0;
 						// +1 to account for such situations as original frequency only having 1 harmonic (itsself), where quotient harmonic will
 						//     be guaranteed to have itsself as well as the original frequency as harmonics
 						if (moreInQuotient)
 						{
-							___Origfreq = ___Origquot;
 							hasHarmonics = true;
 							freq = possibleFirstHarmonic;
 						}
 					}
 
-					if (hasHarmonics)
+					if (hasHarmonics && !FundamentalAlreadyFound(noteFreqs, freq))
 					{
-						if (!AlreadyFound(noteFreqs, freq))
-						{
-							//Console.WriteLine("Original: " + ___Origfreq + "; " + harmonicsRequired + " harmonics");
-							noteFreqs.Add(freq);
-						}
+						noteFreqs.Add(freq);
 					}
 				}
 			}
@@ -164,71 +170,25 @@ namespace GuitarTabber
 			return true;
 		}
 
-		// finds whether or not a given index is a harmonic of a note already found
-		/*static bool IsHarmonicInBuffer(AudioBuffer buf, List<double> firstHarmonics, int index)
+		// returns whether or not this frequency is a harmonic of a frequency already found
+		static bool FundamentalAlreadyFound(List<double> noteFreqs, double frequency)
 		{
-			double thisFreq = index * buf.FrequencyResolution;
-			// allows some tolerance for the possibile loss of precision due to coarse fft frequency resolution
-			double upperBound = (index + 1) * buf.FrequencyResolution; // TODO fix bounds/maybe add lower bound
-
-			foreach (double f in firstHarmonics)
+			foreach (double f in noteFreqs)
 			{
-				int possibleHarmonicNum = (int)Math.Round(thisFreq / f);
+				int harmonicNum = (int)Math.Round(frequency / f);
+				double fundamental = frequency / harmonicNum;
 
-				double possibleHarmonicFreq = f * possibleHarmonicNum;
-				if (possibleHarmonicFreq >= thisFreq && possibleHarmonicFreq <= upperBound)
+				// quarter-note away is considered same note
+				double lowBound = f / QTR_NOTE_INCREASE;
+				double highBound = f * QTR_NOTE_INCREASE;
+				if (fundamental >= lowBound && fundamental <= highBound)
 				{
 					return true;
 				}
 			}
 
 			return false;
-		}*/
-
-		static bool AlreadyFound(List<double> noteFreqs, double frequency)
-		{
-			double lowBound = frequency / QTR_NOTE_INCREASE;
-			double highBound = frequency * QTR_NOTE_INCREASE;
-			return noteFreqs.Any(f => f >= lowBound && f <= highBound);
 		}
-
-		/*static int NumHarmonics(AudioBuffer[] buffers, ref double frequency)
-		{
-			// accurateFreq tries to represent more accurate actual frequency at t
-			double accurateFreq = frequency;
-			// start at 1: fundamental harmonic of given frequency
-			int numHarmonics = 1;
-
-			for (int harmonicNum = 2; harmonicNum <= 8 && harmonicNum * accurateFreq < AudioBuffer.FFT_HIGHEST_FREQ; harmonicNum++)
-			{
-				bool inAll = true;
-
-				// tries to more accurately depict what the fundamental harmonic frequency is
-				List<double> fundHarmFreqs = new List<double>();
-				foreach (AudioBuffer buf in buffers)
-				{
-					if (HasNthHarmonic(buf, harmonicNum, accurateFreq, out double f))
-					{
-						fundHarmFreqs.Add(f / harmonicNum);
-					}
-					else
-					{
-						inAll = false;
-						break;
-					}
-				}
-				
-				if (inAll)
-				{
-					int numData = numHarmonics++ * buffers.Length;
-					double totalAverage = (fundHarmFreqs.Sum() + accurateFreq * numData) / (numHarmonics * buffers.Length);
-					accurateFreq = totalAverage;
-				}
-			}
-
-			frequency = accurateFreq;
-			return numHarmonics;
-		}*/
 
 		// adjusts frequency to try to make it more precise based on its harmonics
 		static bool HasNHarmonics(AudioBuffer[] buffers, int n, ref double frequency)
@@ -279,8 +239,8 @@ namespace GuitarTabber
 			double lowBound = targetFreq / QTR_NOTE_INCREASE;
 			double upBound = targetFreq * QTR_NOTE_INCREASE;
 
-			int lowBoundIndex = (int)(lowBound / AudioBuffer.FREQ_RESOLUTION);
-			int upBoundIndex = (int)(upBound / AudioBuffer.FREQ_RESOLUTION);
+			int lowBoundIndex = (int)Math.Round((lowBound - buf.Offset) / AudioBuffer.FREQ_RESOLUTION); // TODO maybe get rid of round
+			int upBoundIndex = (int)Math.Round((upBound - buf.Offset) / AudioBuffer.FREQ_RESOLUTION);
 			// finds the index in search that is closest to target frequency value
 			(double minDist, int index) = (double.MaxValue, 0);
 			for (int searchIndex = lowBoundIndex; searchIndex <= upBoundIndex; searchIndex++)

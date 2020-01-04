@@ -104,19 +104,14 @@ namespace GuitarTabber
 
 				if (pcm.Max() > 350)
 				{
-					//DrawDiagrams(pcm, ffts);
-					DateTime tb = DateTime.Now;
-					for (int i = 0; i < 1000; i++)
-					{
-						List<double> dominantFreqs = FFTInterpreter.NoteFreqs(Buffers);
-					}
-					Console.WriteLine((DateTime.Now - tb).TotalMilliseconds / 1000);
+					DrawDiagrams(pcm, ffts);
+					List<double> dominantFreqs = FFTInterpreter.NoteFreqs(Buffers);
 					string s = "";
-					/*foreach (double f in dominantFreqs)
+					foreach (double f in dominantFreqs)
 					{
-						s += f.ToString("F3") + ", ";
+						s += f.ToString("F3") + "\n";
 					}
-					lblFreqs.Text = s;*/
+					lblFreqs.Text = s;
 
 				}
 			}
