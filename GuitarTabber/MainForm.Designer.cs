@@ -217,7 +217,7 @@
 			// label4
 			// 
 			this.label4.AutoSize = true;
-			this.label4.Location = new System.Drawing.Point(10, 69);
+			this.label4.Location = new System.Drawing.Point(819, 13);
 			this.label4.Name = "label4";
 			this.label4.Size = new System.Drawing.Size(66, 13);
 			this.label4.TabIndex = 15;
@@ -226,7 +226,7 @@
 			// label5
 			// 
 			this.label5.AutoSize = true;
-			this.label5.Location = new System.Drawing.Point(209, 69);
+			this.label5.Location = new System.Drawing.Point(32, 79);
 			this.label5.Name = "label5";
 			this.label5.Size = new System.Drawing.Size(79, 13);
 			this.label5.TabIndex = 16;
@@ -235,7 +235,7 @@
 			// lblVolume
 			// 
 			this.lblVolume.AutoSize = true;
-			this.lblVolume.Location = new System.Drawing.Point(83, 69);
+			this.lblVolume.Location = new System.Drawing.Point(892, 13);
 			this.lblVolume.Name = "lblVolume";
 			this.lblVolume.Size = new System.Drawing.Size(0, 13);
 			this.lblVolume.TabIndex = 17;
@@ -243,17 +243,18 @@
 			// lblFrequency
 			// 
 			this.lblFrequency.AutoSize = true;
-			this.lblFrequency.Location = new System.Drawing.Point(295, 69);
+			this.lblFrequency.Location = new System.Drawing.Point(118, 79);
 			this.lblFrequency.Name = "lblFrequency";
-			this.lblFrequency.Size = new System.Drawing.Size(0, 13);
+			this.lblFrequency.Size = new System.Drawing.Size(56, 13);
 			this.lblFrequency.TabIndex = 18;
+			this.lblFrequency.Text = "294.85 Hz";
 			// 
 			// picFFT1
 			// 
 			this.picFFT1.BackColor = System.Drawing.Color.White;
 			this.picFFT1.Location = new System.Drawing.Point(32, 95);
 			this.picFFT1.Name = "picFFT1";
-			this.picFFT1.Size = new System.Drawing.Size(980, 80);
+			this.picFFT1.Size = new System.Drawing.Size(524, 80);
 			this.picFFT1.TabIndex = 20;
 			this.picFFT1.TabStop = false;
 			// 
@@ -293,7 +294,7 @@
 			this.btnBeginAnalyzing.BackColor = System.Drawing.SystemColors.Control;
 			this.btnBeginAnalyzing.Location = new System.Drawing.Point(560, 11);
 			this.btnBeginAnalyzing.Name = "btnBeginAnalyzing";
-			this.btnBeginAnalyzing.Size = new System.Drawing.Size(154, 55);
+			this.btnBeginAnalyzing.Size = new System.Drawing.Size(154, 41);
 			this.btnBeginAnalyzing.TabIndex = 24;
 			this.btnBeginAnalyzing.Text = "Begin Analyzing";
 			this.btnBeginAnalyzing.UseVisualStyleBackColor = false;
@@ -303,7 +304,7 @@
 			this.picFFT2.BackColor = System.Drawing.Color.White;
 			this.picFFT2.Location = new System.Drawing.Point(32, 181);
 			this.picFFT2.Name = "picFFT2";
-			this.picFFT2.Size = new System.Drawing.Size(980, 80);
+			this.picFFT2.Size = new System.Drawing.Size(524, 80);
 			this.picFFT2.TabIndex = 25;
 			this.picFFT2.TabStop = false;
 			// 
@@ -312,14 +313,14 @@
 			this.picFFT3.BackColor = System.Drawing.Color.White;
 			this.picFFT3.Location = new System.Drawing.Point(32, 267);
 			this.picFFT3.Name = "picFFT3";
-			this.picFFT3.Size = new System.Drawing.Size(980, 80);
+			this.picFFT3.Size = new System.Drawing.Size(524, 80);
 			this.picFFT3.TabIndex = 26;
 			this.picFFT3.TabStop = false;
 			// 
 			// picFFT4
 			// 
 			this.picFFT4.BackColor = System.Drawing.Color.White;
-			this.picFFT4.Location = new System.Drawing.Point(32, 353);
+			this.picFFT4.Location = new System.Drawing.Point(32, 381);
 			this.picFFT4.Name = "picFFT4";
 			this.picFFT4.Size = new System.Drawing.Size(980, 80);
 			this.picFFT4.TabIndex = 27;

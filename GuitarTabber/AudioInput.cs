@@ -87,7 +87,7 @@ namespace GuitarTabber
 		}
 
 		// finds when a note begins to be played from the pcm sample
-		/*public static (int, int) StartEndNote(short[] pcm)
+		public static (int, int) StartEndNote(short[] pcm)
 		{
 			// minimum level for note to be detected
 			const int THRESHOLD = 150;
@@ -129,6 +129,6 @@ namespace GuitarTabber
 			}
 
 			return (0, 0);
-		}*/
+		}
 	}
 }

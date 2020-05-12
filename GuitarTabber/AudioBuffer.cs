@@ -60,7 +60,7 @@ namespace GuitarTabber
 
 			const int HIGH = (int)(FFT_HIGHEST_FREQ / FREQ_RESOLUTION);
 			double[] freqs = new double[HIGH];
-			for (int i = 7; i < freqs.Length; i++)
+			for (int i = 4; i < freqs.Length; i++)
 			{
 				freqs[i] = complexPcm[i].Magnitude;
 			}

@@ -43,6 +43,7 @@ namespace GuitarTabber
 		public static List<double> NoteFreqs(AudioBuffer[] buffers)
 		{
 			List<double> noteFreqs = new List<double>();
+			List<double> allPeaks = new List<double>();
 
 			int maxIndex = buffers[0].FFT.Length;
 			for (int i = 0; i < maxIndex; i++)
@@ -84,7 +85,7 @@ namespace GuitarTabber
 						if (IsPeakInBuffer(other, searchIndex))
 						{
 							isPeak = true;
-							double h = other.FFT[searchIndex] - other.FFT[searchIndex - 1] - searchIndex < maxIndex - 1 ? other.FFT[searchIndex + 1] : 0;
+							double h = other.FFT[searchIndex] - other.FFT[searchIndex - 1] - ((searchIndex < maxIndex - 1) ? other.FFT[searchIndex + 1] : 0);
 							if (h > highest)
 							{
 								highest = h;//other.FFT[searchIndex];
@@ -111,21 +112,17 @@ namespace GuitarTabber
 					{
 						continue;
 					}
+					allPeaks.Add(freq);
 
 					double ___Origfreq = freq;///// debug
 					int harmonicsRequired = 4;
 					bool hasHarmonics = HasNHarmonics(buffers, harmonicsRequired, ref freq);
 					harmonicsRequired += hasHarmonics ? 1 : 0;
 
-					double asdfasdf = 0;
 					foreach (double f in noteFreqs)
 					{
 						// this would only apply if the fundamental harmonic was not found earlier due to close proximity to another peak
 						double possibleFirstHarmonic = freq / Math.Round(freq / f);
-						if (FundamentalAlreadyFound(noteFreqs, possibleFirstHarmonic))
-						{
-							continue;
-						}
 
 						bool moreInQuotient = HasNHarmonics(buffers, harmonicsRequired, ref possibleFirstHarmonic);
 
@@ -195,7 +192,6 @@ namespace GuitarTabber
 		{
 			// accurateFreq tries to represent more accurate actual frequency at t
 			double accurateFreq = frequency;
-			// start at 1: fundamental harmonic of given frequency
 			int numHarmonics = 1;
 
 			for (int harmonicNum = 2; harmonicNum <= n + 1 && harmonicNum * accurateFreq < AudioBuffer.FFT_HIGHEST_FREQ; harmonicNum++)
@@ -225,7 +221,7 @@ namespace GuitarTabber
 
 					if (numHarmonics == n)
 					{
-						frequency = accurateFreq;
+						frequency = accurateFreq; // TODO make frequency highest harmonic found divided by harmonic number
 						return true;
 					}
 				}

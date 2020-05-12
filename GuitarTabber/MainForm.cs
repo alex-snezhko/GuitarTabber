@@ -68,6 +68,10 @@ namespace GuitarTabber
 				return;
 			}
 
+			double dt = (DateTime.Now - t).TotalMilliseconds;
+			Console.WriteLine("FFT: " + dt.ToString());
+			t = DateTime.Now;
+
 			if (ambientGathered)
 			{
 				btnBeginAnalyzing.BackColor = Color.Red;
@@ -102,22 +106,25 @@ namespace GuitarTabber
 
 				
 
-				if (pcm.Max() > 350)
+				if (pcm.Max() > 250)
 				{
 					DrawDiagrams(pcm, ffts);
 					List<double> dominantFreqs = FFTInterpreter.NoteFreqs(Buffers);
+					lblFrequency.Text = dominantFreqs[0].ToString();
+
+					dt = (DateTime.Now - t).TotalMilliseconds;
+					Console.WriteLine("Find Freqs: " + dt.ToString());
+
 					string s = "";
 					foreach (double f in dominantFreqs)
 					{
 						s += f.ToString("F3") + "\n";
 					}
 					lblFreqs.Text = s;
-
 				}
 			}
 
-			double dt = (DateTime.Now - t).TotalMilliseconds;
-			//Console.WriteLine(dt.ToString());
+		
 
 
 
@@ -363,6 +370,6 @@ namespace GuitarTabber
 			//tab = null;
 			//tmrTabTime.Stop();
 			//tmrTabTime.Enabled = false;
-		}	
+		}
 	}
 }
